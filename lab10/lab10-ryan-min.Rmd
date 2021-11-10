@@ -1,0 +1,226 @@
+---
+title: "Lab 10: Shiny Apps"
+subtitle: "Stat 133, Fall 2021"
+output: 
+  html_document:
+    toc: true
+---
+
+> ### Learning Objectives
+>
+> - getting started with shiny apps
+> - simple use of random number generator functions
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+### General Instructions
+
+- This lab consists of two parts: 1) computing probabilities, and 2) shiny apps.
+- Write your descriptions and code, for the first part of this lab, in an `Rmd` (R markdown) file.
+- Name this file as `lab10-first-last.Rmd`, where `first` and `last` are your
+first and last names (e.g. `lab10-gaston-sanchez.Rmd`).
+- Knit your `Rmd` file as an html document (default option).
+- Also, name your app's R script as `app-first-last.R`, where `first` and 
+`last` are your first and last names (e.g. `app-gaston-sanchez.R`).
+- Submit your `Rmd`, `html`, and `app2.R` files to bCourses, in the corresponding 
+lab assignment. BTW: `app2.R` has to be adapted to compute annuities.
+
+
+-----
+
+
+# Part I) Future Value and Annuity
+
+In this part, you will have to write functions for 
+
+- computing the future value using the "plain vanilla" formula of compound 
+interest,
+
+- computing the future value of an ordinary annuity
+
+
+## 1) Future Value (Compound Interest)
+
+As discussed in lecture, the most basic formula to compute Future Value
+("plain vanilla" compound interest) is given by:
+
+$$
+\text{FV} = \text{P} \left( 1 + r \right)^{n}
+$$
+
+where: 
+
+- $\text{FV}$ = future value (amount accumulated)
+- $\text{P}$ = principal (how much you start with)
+- $r$ = annual interest rate (or annual rate of return) 
+- $n$ = number of years
+
+
+-----
+
+
+### 1.1) Your Turn: function `future_value()`
+
+- Use the formula of the "basic" future value to write a function `future_value()`.
+
+- Give descriptive names to the arguments of the function.
+
+- Also, give default values to the arguments.
+
+- And don't forget to include comments.
+
+```{r}
+# your code
+future_value = function(principal, annual_rate, years){
+  return(principal * (1 + annual_rate) ^ years)
+}
+```
+
+
+-----
+
+
+### 1.2) Your turn: using `future_value()`
+
+Paul deposits \$1,000 in a Certificate of Deposit for 5 years at 2% per year compounded annually. What will be the value of the money at the end of 5 years?
+
+```{r}
+# your code
+paul_return = future_value(1000, 0.02, 5)
+paul_return
+```
+
+
+-----
+
+
+## 2) Future Value of Annuity
+
+The future value of an annuity is a calculation that measures how much a series 
+of fixed contributions (i.e. payments) would be worth at a specific date in the 
+future when paired with a particular interest rate (or rate of return). 
+
+There are two flavors of annuities: 
+
+i) __ordinary annuity__, and
+
+ii) __annuity due__
+
+In an ordinary annuity, contributions or payments are made at the end of each 
+period. In an annuity due, contributions are made at the beginning of each 
+period. Their formulas are given by:
+
+$$
+\text{ordinary annuity} \longrightarrow \text{FV} = \text{PMT} \times \frac{ \Big(1 + r \Big)^{n} - 1}{r} \\
+$$
+
+$$
+\text{annuity due} \longrightarrow \text{FV} = \text{PMT} \times \frac{ \Big(1 + r \Big)^n - 1}{r} \times \Big(1 + r \Big)
+$$
+
+where:
+
+- $\text{FV}$ = future value (amount accumulated)
+- $\text{PMT}$ = periodic contribution made at the end of each period
+- $r$ = annual interest rate (i.e. annual rate of return) 
+- $n$ = number of years
+
+
+-----
+
+
+### 2.1) Your Turn: function `annuity()`
+
+- Use the formulas given above to write a function `annuity()`, that 
+allows you to compute the future value of an annuity. 
+
+- Include an argument `due` that lets you specify whether the annuity
+is ordinary (`due = FALSE`) or due (`due = TRUE`).
+
+- Give descriptive names to the arguments of the function.
+
+- Also, give default values to the arguments.
+
+- Don't forget to include comments.
+
+```{r}
+# your code
+annuity = function(pmt=0, r=1, years=0, due=FALSE){
+  if (due == TRUE) {
+    return(pmt * (((1 + r) ^ years - 1) / r) * (1 + r))
+  } else {
+    return(pmt * (((1 + r) ^ years - 1) / r))
+  }
+}
+```
+
+
+-----
+
+
+### 2.2) Your Turn: using `annuity()` 
+
+Use your `annuity()` function to answer the following question.
+
+a) Mr. X deposits an amount of \$1200 at the end of each year for the next ten 
+years for his son's education. How much money will Mr. X have at the end 
+of ten years if the annual rate of return is 6%?
+
+```{r}
+# your code
+annuity(pmt=1200, r=0.06, years=10)
+```
+
+b) Mr. and Mrs. Z deposit an amount of \$1200 at the beginning of each year for 
+the next ten years for their retirement. How much money will they have at the 
+end of ten years if the annual rate of return is 6%?
+
+```{r}
+# your code
+annuity(pmt=1200, r=0.06, years=10, due=TRUE)
+```
+
+
+-----
+
+
+# Part II) Shiny Apps
+
+Go to the __Files__ tab in bCourses, click on the folder __shiny-apps__, and
+select the __shiny-future-value__. This folder contains three sample shiny apps:
+
+- `app1.R`: sample shiny app for graphing a timeline for Future Value (of 
+compound interest).
+
+- `app2.R`: sample shiny app for graphing a timeline for Future Value (of 
+compound interest) using a randomly generated rate of return.
+
+- `app3.R`: sample shiny app for generating various simulations of future 
+values, using randomly generated rates of return, and graphing their timelines.
+For example: this can give you an idea of how much money you could expect to 
+have in you invest some amount in a given asset that has a rate of return
+(with a certain average annual return, and an average annual volatility).
+
+
+### 3.1) Your Turn: Shiny App for Annuity
+
+Use the sample code in each app (`app1.R`, `app2.R`, `app3.R`) and modify each 
+of them to compute __future value of annuity__. You may want to include an 
+input widget (for example a `radioButtons` widget) to specify whether to 
+calculate an ordinary annuity or an annuity due.
+
+Use your shiny apps to explore the following scenarios:
+
+Say you are going to make periodic annual contributions of \$1200 in some
+financial asset, during a certain period of time, for example 10 years:
+
+- contributions can be made at the end of each year
+
+- or at the beginning of every year
+
+Try different values for the annual rate of return, as well as different time
+periods: e.g. 10-year period, or 15 years, or after 20 years.
+

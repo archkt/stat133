@@ -1,0 +1,46 @@
+2.1)
+ls
+ls -l
+ls -l -r
+ls -l -t
+ls *.txt
+ls *.csv -r
+ls ????.csv
+ls *[2]*.csv
+ls *[0-9]*
+history: show the typed command
+
+2.2)
+cd stat133-lab05 && mkdir data
+cd data
+mkdir txt-files
+mkdir csv-files
+mv ../bread.txt txt-files
+ls txt-files
+mv ../*.txt txt-files
+ls txt-files
+ls ..
+mv ../*.csv csv-files
+ls csv-files
+ls ..
+
+2.3)
+cd ..
+mkdir copies
+cp data/txt-files/bread.txt copies
+ls copies
+cp data/txt-files/*.txt copies
+ls copies
+cp data/csv-files/*.csv copies
+ls copies
+
+2.4)
+cd copies
+mv bread.txt bread-recipe.txt
+mv cars.csv auto.csv
+mv btaco.txt breakfast-taco.txt
+cd ..
+mv copies copy-files
+rm copy-files/*.csv
+rm -r copy-files
+ls data/txt-files -r

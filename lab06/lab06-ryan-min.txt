@@ -1,0 +1,352 @@
+---
+title: "Lab 6: Unix Filters and Pipes"
+subtitle: "Stat 133, Fall 2021"
+output: 
+  github_document:
+    keep_html: true
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+> ### Learning Objectives:
+>
+> - Use Unix output redirection with `>` and `>>`
+> - Use Unix pipes with `|`
+> - Use filters: `cut`, `paste`, `sort`, `uniq`, `grep`
+
+### General Instructions
+
+- You DON'T need to use an `.Rmd` file for this lab
+- Part of this lab involves writing code in an `R` script file.
+- Name this file as `lab06-first-last.txt`, where `first` and `last` are your
+first and last names (e.g. `lab06-gaston-sanchez.txt`).
+- Submit your `.txt` file to bCourses, in the corresponding lab assignment.
+
+
+## Tents Data
+
+In this lab you are going to use the data set `tents.csv` (a few rows shown
+below)
+
+```
+             name     brand  price weight height     bestuse  seasons capacity
+1   fly-creek-ul2 big-agnes 349.95    960     96 Backpacking 3-season 2-person
+2   fly-creek-ul3 big-agnes 449.95   1450    107 Backpacking 3-season 3-person
+3        salida-2     kelty 159.95   1700    102 Backpacking 3-season 2-person
+4 jack-rabbit-sl3 big-agnes 359.95   2160    107 Backpacking 3-season 3-person
+5       passage-2       rei 149.00   2210    107 Backpacking 3-season 2-person
+6 copper-spur-ul2 big-agnes 399.95   1530    107 Backpacking 3-season 2-person
+```
+
+Use the `tents.csv` data to perform the following tasks. All the 
+commands have to be bash-shell commands (not R commands).
+
+- `cut` allows you to _select_ columns
+- `paste` allows you to _merge_ columns
+- `sort` can be used to _arrange_ lines
+- `sort` can also be used to _group by_ lines
+- `sort` and `uniq` can be used to _count_ occurrences
+- `grep` allows you to _filter_ rows
+
+Use the cheatsheet provided at the end of this document.
+
+
+### Example 1) Names of Tents
+
+__1.1)__ Here's a pipeline to obtain the names of the first 5 tents in the data file. 
+First we `cut` the second column (team names), then we skip the first row with `tail +2`, and finally we `head` the first 5 elements:
+
+```{bash}
+# display names of first 5 tents
+cut -f 1 -d "," tents.csv | tail +2 | head -n 5
+```
+
+__1.2)__ We can use the previous pipeline, and redirect the output to a text file `names5.txt` using the output redirection operator `>`.
+
+```{bash}
+# file with names of first 5 tents
+cut -f 1 -d "," tents.csv | tail +2 | head -n 5 > names5.txt
+```
+
+To confirm that `names5.txt` has the tent names, we can use `head` to display the first five lines of the created file:
+
+```{bash}
+head names5.txt
+```
+
+__1.3)__ We can take the pipeline above, and pipe it with `sort` so that we 
+get the names sorted alphabetically
+
+```{bash}
+# display names of first 5 tents, sorted alphabetically
+cut -f 1 -d "," tents.csv | tail +2 | head -n 5 | sort
+```
+
+
+### Your turn:
+
+__1.4)__ Modify the previous pipe to get the names (of the first 5 tents) sorted 
+alphabeticlly in decreasing order
+
+```{bash}
+# your bash command
+cut -f 1 -d "," tents.csv | tail +2 | head -n 5 | sort -r
+```
+
+__1.5)__ Write a pipe to get the names of the last 5 tents (no sorting required)
+
+```{bash}
+# your bash command
+cut -f 1 -d "," tents.csv | tail -n 5
+```
+
+__1.6)__ Write a pipe to get the `name` and `brand` of the first 5 tents
+
+```{bash}
+# your bash command
+cut -f 1,2 -d "," tents.csv | tail +2 | head -n 5
+```
+
+__1.7)__ Write a pipe to get the `name`, `bestuse`, and `capacity` of the last 5 tents
+
+```{bash}
+# your bash command
+cut -f 1,6,8 -d "," tents.csv | tail -n 5
+```
+
+
+### Example 2) Listing and Counting Categories
+
+__2.1)__ Often, we want to list unique values. For example, say we are interested in knowing which are the (unique) categories `bestuse`. We can pipe `sort` and `uniq` for this purpose. Here's how:
+
+```{bash}
+cut -f 6 -d "," tents.csv | tail +2 | sort | uniq
+```
+
+__2.2)__ What if, in addition to identify the unique categories, we want to obtain their frequencies (i.e. counts)? Then, simply add the option `-c` for `uniq`
+
+```{bash}
+cut -f 6 -d "," tents.csv | tail +2 | sort | uniq -c
+```
+
+
+#### Your turn:
+
+__2.3)__ Take the previous command and pipe it again with `sort` in order to display the categories (and their counts) in increasing order
+
+```{bash}
+# your bash command
+cut -f 6 -d "," tents.csv | tail +2 | sort | uniq -c | sort
+```
+
+__2.4)__ Write a pipe to list (i.e. display) the unique categories of `seasons`
+
+```{bash}
+# your bash command
+cut -f 7 -d "," tents.csv | tail +2 | sort | uniq
+```
+
+__2.5)__ Write a pipe to list (i.e. display) the unique categories of `seasons` and their counts
+
+```{bash}
+# your bash command
+cut -f 7 -d "," tents.csv | tail +2 | sort | uniq -c
+```
+
+__2.6)__ Now let's make things a bit more interesting: `cut` both `bestuse` and 
+`seasons`, and pipe them to `sort` and `uniq` to get the counts for all possible 
+combinations of categories from `bestuse` and `seasons`
+
+```{bash}
+# your bash command
+cut -f 6,7 -d "," tents.csv | tail +2 | sort | uniq -c
+```
+
+
+
+### Example 3) Selecting Rows
+
+__3.1)__ Another useful unix filter is `grep`. One basic use for this command is 
+to match certain pattern. For example, here's how to find (match) those rows 
+of tents with brand `marmot`.
+
+```bash
+grep "marmot" tents.csv
+```
+
+We can pipe the previous command with `wc` to count how many _marmot_ tents are 
+in `tents.csv` (i.e. counting number of lines):
+
+```{bash echo = FALSE, eval = FALSE}
+# how many marmot tents
+grep "marmot" tents.csv | wc -l
+```
+
+
+__3.2)__ If you want to create a file with the data for `marmot` tents, you can redirect the output to a text file `marmot-tents.csv`:
+
+```bash
+grep "marmot" tents.csv > marmot-tents.csv
+```
+
+Notice that the created file `marmot.csv` does NOT contain names of columns in 
+the first row. If you want the file to include column names, you need to 
+write two commands like so:
+
+```bash
+head -n 1 tents.csv > marmot-tents.csv
+grep "marmot" tents.csv >> marmot-tents.csv
+```
+
+
+### Your Turn
+
+__3.3)__ Pipe `grep` with `wc` to count the number of tents from brand `rei`
+
+```{bash}
+# your bash command
+grep "rei" tents.csv | wc -l
+```
+
+__3.4)__ Write a similar pipe to the one above to find how many `Backpacking` 
+tents are in `tents.csv`
+
+```{bash}
+# your bash command
+grep "Backpacking" tents.csv | wc -l
+```
+
+__3.5)__ Write a pipe to create a file `big-agnes-tents.csv` containing the 
+data for tents of brand `big-agnes`:
+
+```{bash}
+# your bash command
+  grep "big-agnes" tents.csv > big-agnes-tents.csv
+```
+
+__3.6)__ Write commands to create a file `kelty-tents.csv` containing the 
+data for tents of brand `kelty`, arranged by name alphabetically. This file 
+should have column names in the first line (i.e. first row).
+
+```{bash}
+# your bash command
+head -n 1 tents.csv > kelty-tents.csv
+grep "kelty" tents.csv >> kelty-tents.csv
+```
+
+
+
+### 4) More Pipes (your turn)
+
+
+__4.1)__ Write a pipeline to obtain the unique categories of `bestuse` (column 6). The output of the pipeline should contain only the categories (NOT the counts). _HINT:_ `cut`, `sort`, and `uniq` are your friends.
+
+```{bash echo = FALSE, eval = FALSE}
+cut -f 6 -d "," tents.csv | tail +2 | sort | uniq
+```
+
+
+__4.2)__ Write a pipeline to obtain the counts (i.e. frequencies) of the different `bestuse` values (column 6), displayed from largest to smallest (i.e. descending order).
+The first column corresponds to count, the second column corresponds to experience. Redirect the output to a text file `bestuse-counts.txt`. A
+_HINT:_  `cut`, `tail`, `sort`, `uniq`; and redirection `>` operator, are your friends.
+
+```{bash}
+# your bash command
+cut -f 6 -d "," tents.csv | tail +2 | sort | uniq -c | sort -r
+```
+
+__4.3)__ Use output redirection commands to create a CSV file `msr-tents.csv` containing data for the `msr` brand. Your CSV file should include column names in the first row. 
+_HINT:_ redirection operators `>` and `>>`, as well as `head` and `grep` are your friends.
+
+```{bash}
+# your bash command
+head -n 1 tents.csv > msr-tents.csv
+grep "msr" tents.csv >> msr-tents.csv
+```
+
+__4.4)__ Use the previously created file `msr-tents.csv` to select, separately, the columns `name`, `weight`, and `price`. Store each column in a text file: `name.txt`, `weight.txt`, and `price.txt`
+
+```{bash}
+# your bash command
+cut -f 1 -d "," msr-tents.csv > name.txt
+cut -f 4 -d "," msr-tents.csv > weight.txt
+cut -f 3 -d "," msr-tents.csv > price.txt
+```
+
+__4.5)__ Use the previously created files `name.txt`, `weight.txt`, and `price.txt` to `paste` them (i.e. merge them), in that order, into a new CSV file `msr-prices.csv` (comma separated values!!!).
+
+```{bash}
+# your bash command
+paste -d "," name.txt,weight.txt,price.txt > msr-prices.csv
+```
+
+
+__4.6)__ Write a pipeline to list (display) the five largest prices in decrasing order.
+
+```{bash}
+# your bash command
+cut -f 3 -d "," tents.csv | tail +2 | sort -n | uniq | tail -n 5 | sort -r
+```
+
+
+__4.7)__ Write pipelines to create a file `top10-tents.csv` containing the 
+top10 tents by `price` from largest to smallest. Your CSV 
+file should include tent `name`, `brand`, `price`. 
+
+```{bash}
+# your bash command
+head -n 1 tents.csv | cut -f 1,2,3 -d "," > top10-tents.csv
+cut -f 1,2,3 -d "," tents.csv | sort -k 3 -n -t "," -r | head -n 10 >> top10-tents.csv
+```
+
+
+<br>
+
+## Cheat sheet: Unix filters
+
+
+| Command                     | Description                   | R alternative             |
+|-----------------------------|-------------------------------|---------------------------|
+| `wc nba2017-players.csv`    | count lines, words, and bytes | `object.size()`, `nrow()` |
+| `wc -l nba2017-players.csv` | count number of lines         | `nrow()`                  |
+| `head nba2017-players.csv`  | inspect first 10 rows         | `head()`                  |
+| `tail nba2017-players.csv`  | inspect last 10 rows          | `tail()`                  |
+| `less nba2017-players.csv`  | see contents with a paginator | `View()`                  |
+
+
+Extracting columns with __`cut`__
+
+| Option    | Description                                        |
+|-----------|----------------------------------------------------|
+|  `-f` 1,5 | return columns 1 and 5, delimited by tabs.         |
+|  `-f` 1,5 | return columns 1 through 5, delimited by tabs.     |
+|  `-d ","` | use commas as the delimiters.                      |
+|  `-c 2-7` | return characters 2 through 7 from the file.       |
+
+
+Sorting lines with __`sort`__
+
+| Option | Description                                          |
+|--------|------------------------------------------------------|
+|  `-n`  | sort in numerical order rather than alphabetically.  |
+|  `-r`  | sort in reverse order, z to a or decreasing numbers. |
+|  `-f`  | fold uppercase into lowercase (i.e. ignore case).    |
+|  `-u`  | return a unique representative of repeated items.    |
+|  `-k 3`| sort lines based on column 3 (tab or space delimiters) |
+|  `-t ","` | use commas for delimiters.                      |
+|  `-b`  | ignore leading blanks.                               |
+|  `-d`  | sort in dictionary order.                            |
+
+
+Isolating unique lines with __`uniq`__
+
+| Option  | Description                                        |
+|---------|----------------------------------------------------|
+|  `-c`   | adds a count of how many times each line occurred. |
+|  `-u`   | lists only lines that are not repeated.            |
+|  `-d`   | lists only lines that are duplicated.              |
+|  `-i`   | ignore case when determining uniqueness            |
+|  `-f 4` | ignore the first 4 fields (space delimiter)        |
