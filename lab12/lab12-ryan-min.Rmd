@@ -261,7 +261,7 @@ alphanumeric characters):
 
 ```{r}
 # your code (for first name)
-
+str_extract(ath, "\\w+")
 ```
 
 
@@ -271,7 +271,7 @@ use `str_trim()`
 
 ```{r}
 # your code for the last name
-
+str_trim(str_extract(ath, "\\w+\\s(?=\\()"))
 ```
 
 
@@ -281,7 +281,10 @@ purpose:
 
 ```{r}
 # first and alst name of all athletes
-
+first_name = str_extract(dat$Athlete, "\\w+")
+last_name = str_trim(str_extract(dat$Athlete, "\\w+\\s(?=\\()"))
+first_name
+last_name
 ```
 
 
@@ -293,7 +296,8 @@ athlete's name: e.g. `"J.T."`, `"T.L."`, `"G.H."`, etc.
 
 ```{r}
 # initials vector
-
+initials = paste(substr(first_name, 1, 1), substr(last_name, 1, 1), sep = ".")
+initials
 ```
 
 
@@ -318,17 +322,17 @@ these characters:
 
 ```{r}
 # your code (pattern 1)
-
+str_extract(ath, "[A-Z]{3}")
 ```
 
 ```{r}
 # your code (pattern 2)
-
+str_extract(ath, "[:upper:]{3}")
 ```
 
 ```{r}
 # your code (pattern 3)
-
+str_extract(ath, "(?=\\w{3}\\)).{3}")
 ```
 
 
@@ -337,7 +341,8 @@ abbreviations on the entire column to produce a vector `country`
 
 ```{r}
 # your country vector
-
+country = str_extract(dat$Athlete, "[:upper:]{3}")
+country
 ```
 
 
@@ -362,17 +367,23 @@ values of day, month name, and year: you can try using patterns such as
 
 ```{r}
 # your code for days
-
+#str_extract(dts, "\\d+")
+day = str_extract(dat$Date, "\\d+")
+day
 ```
 
 ```{r}
 # your code for months
-
+#str_extract(dts, "[:alpha:]+")
+month = str_extract(dat$Date, "[:alpha:]+")
+month
 ```
 
 ```{r}
 # your code for years
-
+str_extract(dts, "\\d{4}")
+year = str_extract(dat$Date, "\\d{4}")
+year
 ```
 
 
@@ -399,7 +410,8 @@ table. Display the `head()` and `tail()` of this table.
 
 ```{r}
 # your code
-
+discus = data.frame(mark, first_name, last_name, initials, day, month, year)
+discus
 ```
 
 
@@ -413,7 +425,7 @@ for the x-axis, and `mark` for the y-axis
 
 ```{r}
 # your code
-
+ggplot(discus) + geom_point(aes(x=year, y=mark))
 ```
 
 
@@ -446,6 +458,27 @@ $June
 
 ```{r}
 # your code
+months = c('April', 'May', 'June', 'July', 'August', 'September', 'October', 'November')
+names_month = list()
+
+for (i in months) {
+  
+  # filter and sort out data by filter, distinct, and sort
+  temp_df = discus %>%
+  filter(month == i) %>%
+  distinct(first_name, last_name)
+  temp_df = temp_df[order(temp_df$last_name),]
+  
+  # concat strings
+  first = temp_df$first_name
+  last = temp_df$last_name
+  str_vec = paste(last, first, sep=", ")
+  
+  # append vectors to list
+  names_month[[i]] = str_vec
+}
+
+names_month
 
 ```
 
