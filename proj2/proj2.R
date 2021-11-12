@@ -18,7 +18,7 @@ ui <- fluidPage(
                        max = 100,
                        value = 60),
            sliderInput(inputId = "withdrawal",
-                       label = "Withdrawal rate:",
+                       label = "Withdrawal rate(%)",
                        min = 0,
                        max = 100,
                        value = 4)
@@ -96,8 +96,7 @@ server <- function(input, output) {
     for (i in 1:input$num_simulation) {
       simulation = c(1:years+1)
       simulation[1] = input$balance
-      
-      for (j in 2:years+1) {
+      for (j in 1:years+1) {
         interest_rate = rnorm(n = 1,
                               mean = input$annual_return,
                               sd = input$return_volatility)
