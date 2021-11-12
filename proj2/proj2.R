@@ -1,4 +1,5 @@
 library(tidyverse)
+library(shiny)
 
 ui <- fluidPage(
   
@@ -7,7 +8,7 @@ ui <- fluidPage(
   fluidRow(
     # Initial portfolio
     column(3,
-           numericInput(inputId = "portfolio",
+           numericInput(inputId = "balance",
                         label = "Initial portfolio:",
                         value = 1000000,
                         step = 1000),
@@ -79,21 +80,44 @@ server <- function(input, output) {
   # you may need to create reactive objects
   # (e.g. data frame to be used for graphing purposes)
   dat <- reactive({
+    set.seed(input$seed)
+    
     simulations = as.list(1:input$num_simulation)
-    interest_rate = rnorm(n = input$num_simulation,
+    names(simulations) = paste0("sim", 1:input$num_simulation)
+    'interest_rate = rnorm(n = input$num_simulation,
                           mean = input$annual_return,
                           sd = input$return_volatility)
     inflation_rate = rnorm(n = input$num_simulation,
                            mean = input$annual_inflation,
-                           sd = input$inflation_volatility)
+                           sd = input$inflation_volatility)'
+    amount_withdraw = input$balance * input$withdrawal * 0.01
+    years = 100-input$age
     
     for (i in 1:input$num_simulation) {
-      #simulations[[i]] = 
+      simulation = c(1:years+1)
+      simulation[1] = input$balance
+      
+      for (j in 2:years+1) {
+        interest_rate = rnorm(n = 1,
+                              mean = input$annual_return,
+                              sd = input$return_volatility)
+        inflation_rate = rnorm(n = 1,
+                               mean = input$annual_inflation,
+                               sd = input$inflation_volatility)
+        simulation[j] = simulation[j-1] * (1 + interest_rate/100) - amount_withdraw * (1 + inflation_rate/100)
+      }
+      
+      simulations[[i]] = simulation
     }
     
-    data.frame(
-      MPG = mtcars$mpg, 
-      HP = mtcars$hp
+    raw_data = data.frame(simulations)
+    raw_data$year = 0:years
+    
+    pivot_longer(
+      raw_data,
+      cols = starts_with("sim"),
+      names_to = "simulation",
+      values_to = "amount"
     )
   })
   
@@ -102,8 +126,10 @@ server <- function(input, output) {
   # (e.g. reactive data frame used for graphing purposes)
   output$timeline <- renderPlot({
     # replace the code below with your code!!!
-    ggplot(data = dat(), aes(x = HP, y = MPG)) +
-      geom_point()
+    ggplot(data = dat(), aes(x = year, y = amount, group = simulation)) +
+      geom_point(aes(color = simulation)) + 
+      geom_line(aes(color = simulation)) + 
+      theme_minimal()
   })
   
   
