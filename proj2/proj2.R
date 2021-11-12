@@ -1,5 +1,7 @@
 library(tidyverse)
 library(shiny)
+library(ggplot2)
+library(plotly)
 
 ui <- fluidPage(
   
@@ -17,11 +19,12 @@ ui <- fluidPage(
                        min = 30,
                        max = 100,
                        value = 60),
-           sliderInput(inputId = "withdrawal",
+           numericInput(inputId = "withdrawal",
                        label = "Withdrawal rate(%)",
                        min = 0,
                        max = 100,
-                       value = 4)
+                       value = 4,
+                       step = 1)
     ),
     
     # 
@@ -70,7 +73,7 @@ ui <- fluidPage(
   plotOutput('timeline'),
   
   hr(),
-  h4('Dummy text for statistics'),
+  h4('Overall statistics'),
   verbatimTextOutput('table')
 )
 
@@ -125,7 +128,7 @@ server <- function(input, output) {
   # (e.g. reactive data frame used for graphing purposes)
   output$timeline <- renderPlot({
     # replace the code below with your code!!!
-    ggplot(data = dat(), aes(x = year, y = amount, group = simulation)) +
+      ggplot(data = dat(), aes(x = year, y = amount, group = simulation)) +
       geom_point(aes(color = simulation)) + 
       geom_line(aes(color = simulation)) + 
       theme_minimal()
@@ -137,6 +140,8 @@ server <- function(input, output) {
     # replace the code below with your code!!!
     summary(dat())
   })
+  
+  
   
 }
 
