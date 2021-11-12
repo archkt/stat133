@@ -1,0 +1,456 @@
+---
+title: "Untitled"
+output: html_document
+---
+### A) Data IBTrACS
+
+## Import Packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(spData)
+library(gganimate)
+```
+
+
+## Importing Data in R
+Initialize x
+```{r}
+col_names = c(
+  "SID",
+  "SEASON",
+  "NUMBER",
+  "BASIN",
+  "SUBBASIN",
+  "NAME",
+  "ISO_TIME",
+  "NATURE",
+  "LAT",
+  "LON",
+  "WMO_WIND",
+  "WMO_PRES",
+  "WMO_AGENCY",
+  "TRACK_TYPE",
+  "DIST2LAND",
+  "LANDFALL"
+)
+
+col_types = c(
+  "character",
+  "integer",
+  "integer",
+  "character",
+  "character",
+  "character",
+  "character",
+  "character",
+  "double",
+  "double",
+  "integer",
+  "integer",
+  "character",
+  "character",
+  "integer",
+  "integer"
+)
+data = read.csv(
+  file = "ibtracs.NA.list.v04r00.csv",
+  colClasses = c(col_types, rep("NULL", 147)),
+  stringsAsFactors = FALSE,
+  skip = 77876,
+  na.strings = c("")
+)
+colnames(data) = col_names
+```
+
+check if initialized correctly
+```{r}
+head(data)
+```
+
+## Adding a MONTH column
+
+```{r}
+data$ISO_TIME = as.POSIXct(data$ISO_TIME)
+data$MONTH <- lubridate::month(data$ISO_TIME)
+head(data)
+```
+
+display structure of your data
+
+```{r}
+str(data, vec.len = 1)
+```
+
+### B) Univariate Exploratory Data Analysis - EDA
+
+```{r}
+data %>% 
+  group_by(NATURE) %>%
+  count()
+```
+
+```{r}
+data %>% 
+  group_by(BASIN) %>%
+  count()
+```
+
+
+### C) Main Analysis
+
+## C.1) Are hurricanes becoming more frequent?
+
+- get all the hurricanes from the data.
+  -> group by SID, and filter out any unique storm SID such that its max(WMO_WIND) doesn't exceed 64 knots.
+```{r}
+hurricanes = data %>%
+  drop_na(WMO_WIND) %>%
+  group_by(SID) %>%
+  filter(!any(max(WMO_WIND) <= 64))
+
+hurricanes
+```
+
+```{r}
+raw_year_count = hurricanes %>%
+  group_by(SEASON) %>%
+  summarise(count = n_distinct(SID))
+raw_year_count
+
+```
+
+
+For better visual representation, this can be represented as geom_line plot.
+
+```{r}
+ggplot(raw_year_count, aes(SEASON, count)) + geom_line()
+```
+
+But, we don't know the exact tendency by seeing the graph's fluctuation; plotting linear regression will be helpful visualizing the result.
+
+visualizing with geom_smooth
+```{r}
+ggplot(raw_year_count, aes(SEASON, count)) +
+  geom_point() +
+  geom_smooth(method='lm')
+```
+
+- Statistics
+```{r}
+x_season = raw_year_count$SEASON
+y_count = raw_year_count$count
+
+relation = lm(formula = y_count ~ x_season)
+summary(relation)
+```
+
+Conclusion:
+  - The number of hurricanes seems to have some positive correlation over the years , meaning that the number of hurricanes have occurred is likely to increase over years with statistical significance.
+  
+  
+## C.2) Are hurricanes getting stronger?
+
+- Firstly, I need to define what 'strong' means. Here in the univariate analysis, I took WMO_WIND as a way to measure the strength.
+
+- As a next step, I cleaned the data by dropping NA value in WMO_WIND and take average of each specific hurricane. I use hurricane data set defined in the question above.
+
+```{r}
+hurricane_mean = hurricanes %>%
+  drop_na(WMO_WIND) %>%
+  group_by(SID, SEASON) %>%
+  summarise_at(vars(WMO_WIND), list(WMO_WIND_mean = mean))
+
+hurricane_mean
+```
+Before we move on, I will present max and mean strength for each year and take them for different interpretations, since change in max and change in mean strength might represent different meanings. 
+
+```{r}
+hurricane_max_mean_by_year =
+  hurricane_mean %>%
+  group_by(SEASON) %>%
+  summarise(WIND_max = max(WMO_WIND_mean), WIND_mean = mean(WMO_WIND_mean))
+
+hurricane_max_mean_by_year
+```
+
+
+- Visualize
+```{r}
+
+ggplot(hurricane_max_mean_by_year, aes(x = SEASON, y = WIND_mean)) +
+  geom_point() + 
+  geom_smooth(method='lm')
+
+
+ggplot(hurricane_max_mean_by_year, aes(x = SEASON, y = WIND_max)) +
+  geom_point() + 
+  geom_smooth(method='lm')
+
+```
+
+-statistics
+```{r}
+x_season = hurricane_max_mean_by_year$SEASON
+y_mean = hurricane_max_mean_by_year$WIND_mean
+y_max = hurricane_max_mean_by_year$WIND_max
+
+mean_regression = lm(formula = y_mean ~ x_season)
+max_regression = lm(formula = y_max ~ x_season)
+
+summary(mean_regression)
+summary(max_regression)
+
+```
+Conclusion:
+  - While both max and mean strength increase with some significance levels, mean_WIND has more positive correlation, meaning that it actually becomes stronger than when it was 1970 in average-wise. The mean's residual standard error is also less than the max's, meaning that it strongly suggests that the strength growth over the years is probably not a coincidence.
+
+
+## C.3) 2019 Atlantic Hurricane Season
+
+# a) The 2019 atlantic hurricane season had 20 tropical cyclones, of which 18 were named storms.
+
+```{r}
+data %>%
+  filter(SEASON == 2019 & (BASIN == 'NA' | BASIN == 'SA')) %>%
+  group_by(SID, NAME, SEASON) %>%
+  distinct(NAME)
+
+```
+- By looking at this 20x3 tibble suggests that there are 18 named storms in 2019. The rest 2 are listed as 'NOT_NAMED', so the claim is true.
+
+# b) The 2019 atlantic hurricane season had six named storms that achieved hurricane status.
+
+
+``` {r}
+hurricanes_2019_distinct = hurricanes %>%
+  group_by(SID) %>%
+  slice(which.max(WMO_WIND)) %>%
+  filter(SEASON == 2019)
+
+hurricanes_2019_distinct
+```
+
+- In order to reach hurricane status, maximum wind speed has to reach at least 64knots or higher. After cleaning/filtering out the data, there were 7 storms that reached hurricane status with everything named. If we narrow down the scope to subbasin, the claim becomes true, but since the claim looks for overall basins, meaning that it is false.
+
+# c) The 2019 atlantic hurricane season had three named storms that intensified into major hurricanes, all of which became Category 5 hurricanes.
+
+```{r}
+hurricanes_2019_distinct %>%
+  filter(WMO_WIND >= 137)
+```
+
+- Category 5 hurricanes require 137 knots or higher maximum speed. After filtering out, there are only 2 category-5 hurricanes. Therefore, the claim is false.
+
+# d) There was one storm in 2019 that formed outside the official hurricane season (recall that the official season goes from June 1 to November 30).
+
+```{r}
+data %>%
+  filter(SEASON == 2019 & (BASIN == 'NA' | BASIN == 'SA')) %>%
+  group_by(SID, NAME) %>%
+  filter(MONTH < 6 | MONTH > 11) %>%
+  distinct(NAME, MONTH)
+```
+- After filtering out the storms occured in official season, there was only one storm occured in May. So, the claim is true. 
+
+
+# e) Two storms became Category 5 hurricanes, at least one storm making landfall at Category 5 intensity.
+
+
+-Since we know what the 2 category-5-hurricanes are(LORENZO and DORIAN), we pick those 2 and get the first occurence of each.
+```{r}
+first_DORIAN_LORENZO = hurricanes %>%
+  filter(SEASON == 2019 & (NAME == 'LORENZO' | NAME == 'DORIAN')) %>%
+  group_by(NAME) %>%
+  filter(ISO_TIME == min(ISO_TIME)) 
+
+first_DORIAN_LORENZO[c('NAME', 'ISO_TIME', 'WMO_WIND')]
+```
+
+- At each hurricane's first occurence, the wind stength didn't reach category-5 strength. So the claim is false.
+
+## C.4) Animated Map
+Make an animated map of storms in 2019, to display their paths (or trajectories).
+
+1) Initialize a table containing all hurricanes occurred in 2019 (Dropped all NA values in WMO_WIND as I need it for the size description.)
+```{r}
+hurricanes_2019 = hurricanes %>%
+  filter(SEASON == 2019)
+```
+
+```{r}
+hurricanes_2019
+```
+
+2) Initialize world map
+```{r}
+world_map <- map_data("world")
+
+gg_world <- ggplot() + 
+  geom_polygon(data = world_map, 
+               aes(x = long, y = lat, group = group), 
+               fill = "gray95", colour = "gray70", size = 0.2) +
+  theme_bw()
+
+```
+
+```{r}
+gg_world
+```
+
+3) add static point plot on the world grid
+```{r}
+gg_world +
+  geom_point(data = hurricanes_2019,
+             aes(x = LON, y = LAT, color = NAME, size = WMO_WIND))
+```
+
+Here, the paths are overlapped with each other, so draw each distinct graph will be visualized better like the following:
+
+```{r}
+hurricanes_2019_distinct = hurricanes_2019 %>%
+  distinct(NAME)
+hurricanes_2019_distinct
+#BARRY DORIAN HUMBERTO JERRY LORENZO PABLO REBEKAH
+```
+
+4) Define each variable represent each hurricane's plot like following:
+
+```{r}
+barry_plot = gg_world +
+          ggtitle('BARRY') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "BARRY"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.1, 2))
+
+barry_plot
+```
+```{r}
+dorian_plot = gg_world +
+          ggtitle('DORIAN') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "DORIAN"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.5, 3))
+```
+
+```{r}
+humberto_plot = gg_world +
+          ggtitle('HUMBERTO') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "HUMBERTO"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.5, 3))
+```
+
+```{r}
+jerry_plot = gg_world +
+          ggtitle('JERRY') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "JERRY"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.5, 3))
+```
+
+```{r}
+lorenzo_plot = gg_world +
+          ggtitle('LORENZO') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "LORENZO"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.5, 3))
+```
+
+```{r}
+pablo_plot = gg_world +
+          ggtitle('PABLO') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "BARRY"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.5, 3))
+```
+
+```{r}
+rebekah_plot = gg_world +
+          ggtitle('REBEKAH') + 
+  geom_point(data = subset(hurricanes_2019, NAME == "REBEKAH"),
+             aes(x = LON, y = LAT, size = WMO_WIND)) +
+    scale_size_continuous(range = c(0.5, 3))
+```
+
+
+5) Load animation
+
+```{r}
+
+barry_anim = barry_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('barry_anim', animation = last_animation(), path = 'anims')
+```
+```{r}
+barry_anim
+```
+
+- Do for the other hurricanes.
+```{r}
+dorian_anim = dorian_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('dorian_anim', animation = last_animation(), path = 'anims')
+
+humberto_anim = humberto_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('humberto_anim', animation = last_animation(), path = 'anims')
+
+jerry_anim = jerry_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('jerry_anim', animation = last_animation(), path = 'anims')
+
+lorenzo_anim = lorenzo_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('lorenzo_anim', animation = last_animation(), path = 'anims')
+
+pablo_anim = pablo_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('pablo_anim', animation = last_animation(), path = 'anims')
+
+rebekah_anim = rebekah_plot + transition_time(ISO_TIME) + 
+  shadow_wake(.3) + 
+  ease_aes('linear')
+
+#anim_save('rebekah_anim', animation = last_animation(), path = 'anims')
+```
+
+- Output animation
+
+```{r}
+dorian_anim
+```
+
+```{r}
+humberto_anim
+```
+
+```{r}
+jerry_anim
+```
+
+```{r}
+lorenzo_anim
+```
+
+```{r}
+pablo_anim
+```
+
+```{r}
+rebekah_anim
+```
