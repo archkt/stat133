@@ -1,0 +1,252 @@
+---
+title: "Lab 9: Functions and Loops"
+subtitle: "Stat 133, Fall 2021"
+output: 
+  html_document:
+    toc: true
+---
+
+> ### Learning Objectives
+>
+> - Get familiar with the syntax of a `for` loop
+> - Get familiar with the syntax of a `while` loop
+> - Get familiar with the syntax of a `repeat` loop
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### General Instructions
+
+- Write your descriptions, explanations, and code in an `Rmd` (R markdown) file.
+- Name this file as `lab09-first-last.Rmd`, where `first` and `last` are your
+first and last names (e.g. `lab09-gaston-sanchez.Rmd`).
+- Knit your `Rmd` file as an html document (default option).
+- Submit your `Rmd` and `html` files to bCourses, in the corresponding lab assignment.
+
+
+-----
+
+
+## About Loops
+
+- Many times we need to perform a procedure several times
+- In other words, we have to perform the same operation several times as long as some condition is fulfilled
+- For this purpose we use loops
+- The main idea is that of __iteration__ or __repetition__
+- R provides three basic paradigms to handle this situations: `for`, `repeat`, `while`
+
+
+-----
+
+
+### 1) Your Turn: Summation Series
+
+Write a for loop to compute the following series. Your loop should start at 
+step $k=0$ and stop at step $n$. Test your code with
+different values for $n$. And use a vector to store each k-th term at each 
+iteration.
+Does the series converge as $n$ increase?
+
+$$
+\sum_{k=0}^{n} \frac{1}{2^k} = 1 + \frac{1}{2} + \frac{1}{4} + \frac{1}{8} + \dots + \frac{1}{2^n}
+$$
+
+```{r}
+# your code
+sum = 0
+n = 10
+res = c(0:n)
+for(k in 0:n) {
+  sum = sum + (1 / 2^k)
+  res[k+1] = sum
+}
+print(res)
+#it converges
+```
+
+
+-----
+
+
+### 2) Your Turn: Arithmetic Series
+
+Write a for loop to compute the following arithmetic series $a_n = a_1 + (n-1)d$ when $a_1 = 3$, and $d = 3$. For instance: 3 + 6 + 9 + 12 + 15 + ...
+
+$$
+a_n = a_1 + (n-1)d
+$$
+
+
+Test your code with different values for $n$. And use a vector to store each 
+n-th term at each iteration.
+Does the series converge as $n$ increase?
+
+```{r}
+# your code
+a_1 = 3
+d = 3
+n = 5
+sum = 0
+for(i in 1:n) {
+  sum = sum + a_1 + (i-1) *d
+  print(sum)
+}
+ #it diverges 
+```
+
+
+-----
+
+
+### 3) Your Turn: Geometric Sequence
+
+A sequence such as $3, 6, 12, 24, 48$ is an example of a geometric sequence. 
+In this type of sequence, the $n$-th term is obtained as: 
+
+$$
+a_n = a_1 \times r^{n-1}
+$$
+
+where: $a_1$ is the first term, $r$ is the common ratio, and $n$ is the number of 
+terms.
+
+Write a for loop to compute the sum of the first $n$ terms of:
+3 + 6 + 12 + 24 + ... 
+Test your code with different values for $n$. Does the series converge as $n$ 
+increase?
+
+```{r}
+# your code
+a_1 = 3
+r = 2
+n = 4
+sum = 0
+for(i in 1:n) {
+  sum = sum + a_1 * r ^ (i-1)
+
+}
+print (sum)
+#It diverges
+```
+
+
+-----
+
+
+### 4) Your Turn: Sine Approximation
+
+Consider the following series that is used to approximate the function $sin(x)$:
+
+$$
+sin(x) \approx x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \dots
+$$
+
+Write a `for` loop  to approximate $sin(x)$. Try different number of terms, 
+$n = 5, 10, 50, 100$. Compare your results with those of `sin()` function.
+
+```{r}
+# your code
+n = 100
+x = pi / 2
+sin_est = 0
+
+for (i in 1:n){
+  ex = 2 * i - 1
+  fac = factorial(ex)
+  sign = (-1) ^ (i-1)
+  
+  sin_est = sin_est + sign * ((x ^ ex) / fac)
+}
+
+
+cat("estimate sin(", x, ") = ", as.character((sin_est)), "\n")
+cat("actual sin(", x, ") = ", as.character((sin(x))), "\n")
+
+```
+
+
+-----
+
+
+### 5) Your Turn: Average
+
+The average of $n$ numbers $x_1, x_2, \dots, x_n$ is given by the following 
+formula:
+
+$$
+\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \dots + x_n}{n}
+$$
+
+Write R code, using both a `for` loop, and a `while` loop, to 
+compute the average of the vector `x = 1:100`
+
+```{r}
+# your for loop
+x = c(1:100)
+
+avg_for = 0
+len = length(x)
+for(i in 1:len) {
+  avg_for = avg_for + i/len
+}
+print(avg_for)
+```
+
+
+```{r}
+# your while loop
+avg_while = 0
+k = 0
+while(k <= len) {
+  avg_while = avg_while + k/len
+  k = k + 1
+}
+print(avg_while)
+```
+
+
+-----
+
+
+### 6) Counting letters until meeting stop condition
+
+Consider the following vector `letrs` which contains various letters:
+
+```{r}
+letrs <- c(
+  'y', 'd', 'g', 'a', 'b', 'w', 'k', 'n', 'r', 's', 
+  'a', 'u', 'u', 'j', 'v', 'n', 'j', 'g', 'i', 'o', 
+  'u', 'e', 'i', 'y', 'n', 'e', 'e', 'b', 'j', 'y', 
+  'l', 'o', 'a', 't', 'c', 'f', 'j', 'j', 'f', 'o', 
+  't', 't', 'z', 'l', 'y', 'w', 'f', 'y', 'h', 'l', 
+  'y', 'w', 'x', 'f', 'z', 'g', 's', 'j', 'f', 'x', 
+  'n', 'b', 'm', 'r', 'v', 'n', 'f', 'a', 's', 's', 
+  'h', 'f', 'w', 'l', 'f', 'h', 'g', 'k', 'q', 'd', 
+  'm', 'h', 'y', 'p', 'y', 'w', 'n', 't', 'g', 'm', 
+  'v', 'l', 'p', 'a', 'm', 'u', 'f', 'q', 'i', 'g'
+)
+```
+
+
+Write a `while()` loop to count the number of letters in `letrs` until reaching 
+the fifth occurrence of letter `"y"`. Display such a count.
+
+```{r}
+# your code
+y_count = 1
+all_count = 1
+len = length(letrs)
+while (all_count <= len) {
+  if (letrs[all_count] == 'y') {
+    y_count = y_count + 1
+  }
+  if (y_count > 5) {
+    break
+  }
+  all_count = all_count + 1
+}
+print(all_count)
+```
+
