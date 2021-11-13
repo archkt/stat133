@@ -81,7 +81,15 @@ ui <- fluidPage(
   
   hr(),
   h4('Overall statistics'),
-  verbatimTextOutput('table')
+  verbatimTextOutput('table'),
+  
+  hr(),
+  h4('Quantiles'),
+  tabsetPanel(
+    tabPanel("q10", verbatimTextOutput("q10")), 
+    tabPanel("q50", verbatimTextOutput("q50")), 
+    tabPanel("q90", verbatimTextOutput("q90"))
+  )
 )
 
 
@@ -171,7 +179,19 @@ server <- function(input, output) {
   # code for statistics
   output$table <- renderPrint({
     summary(dat())
+    
   })
+  
+  output$q10 <- renderPrint({
+    summary(filter(dat(), simulation == 'q10'))
+  })
+  output$q50 <- renderPrint({
+    summary(filter(dat(), simulation == 'q50'))
+  })
+  output$q90 <- renderPrint({
+    summary(filter(dat(), simulation == 'q90'))
+  })
+
   
   
   
