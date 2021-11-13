@@ -6,14 +6,6 @@ quantile10 = c()
 quantile50 = c()
 quantile90 = c()
 
-calculate_quantile = function(vec, p) {
-  res = c()
-  for(i in 1:length(data)) {
-    res[i] = quantile(vec, p)
-  }
-  return(res)
-}
-
 add_quantile = function(data, checkbox) {
   if ('1' %in% checkbox) {
     data = data %>%
@@ -146,8 +138,15 @@ server <- function(input, output) {
     raw_data = data.frame(simulations)
     raw_data$year = 0:years
     
+    for(i in 0:years+1) {
+      year_balance = raw_data[i,1:input$num_simulation]
+      quantile10[i] = quantile(year_balance, 0.1)
+      #quantile50[i] = quantile(year_balance, 0.5)
+      #quantile90[i] = quantile(year_balance, 0.9)
+    }
+  
     raw_data = add_quantile(raw_data, input$quantile)
-    
+    print(raw_data)
     pivot_longer(
       raw_data,
       cols = starts_with("sim"),
