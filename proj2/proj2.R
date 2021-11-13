@@ -6,11 +6,6 @@ quantile10 = c()
 quantile50 = c()
 quantile90 = c()
 
-add_quantile = function(data, checkbox) {
-  
-  return(data)
-}
-
 ui <- fluidPage(
   
   titlePanel("Proj2"),
@@ -122,8 +117,6 @@ server <- function(input, output) {
     
     mat = t(as.matrix(raw_data[,1:input$num_simulation]))
     
-
-    
     for(i in 0:years+1) {
       year_balance = as.vector(mat[,i])
       quantile10[i] = quantile(year_balance, 0.1)
@@ -131,22 +124,14 @@ server <- function(input, output) {
       quantile90[i] = quantile(year_balance, 0.9)
     }
     
-    #print(quantile10)
-  
-    if ('1' %in% input$quantile) {
-      raw_data = raw_data %>%
-        add_column(q10 = quantile10)
-    }
-    if ('2' %in% input$quantile) {
-      raw_data = raw_data %>%
-        add_column(q50 = quantile50)
-    }
-    if ('3' %in% input$quantile) {
-      raw_data = raw_data %>%
-        add_column(q90 = quantile90)
-    }
-    
-    
+    raw_data = raw_data %>%
+      add_column(q10=quantile10)
+    raw_data = raw_data %>%
+      add_column(q50=quantile50)
+    raw_data = raw_data %>%
+      add_column(q90=quantile90)
+
+
     pivot_longer(
       raw_data,
       cols = starts_with("sim") | starts_with("q"),
@@ -155,26 +140,30 @@ server <- function(input, output) {
     )
   })
   
-  
   # code for graph
   output$timeline <- renderPlot({
     g = ggplot(data = dat(), aes(x = year, y = amount/1000000, group = simulation)) +
       labs(x = 'year till 100', y = 'amount in Million') +
-      geom_line(aes(color = simulation)) + 
-      geom_hline(yintercept = 0, linetype = 'dashed', color = 'red', size = 1)
+      geom_hline(yintercept = 0, linetype = 'dashed', color = 'red', size = 1) + 
+      geom_line(aes(color = simulation))
     
     if (is.null(input$quantile)) {
       g = g + geom_line(aes(color = simulation))
     }
     if ('1' %in% input$quantile) {
-      g = g + geom_line(quantile10, color = 'yellow')
+      q10 = filter(dat(), simulation == 'q10')
+      g = g + geom_line(data=q10, aes(x = year, y = amount/1000000), color = 'black', size = 1)
     }
     if ('2' %in% input$quantile) {
-      g = g + geom_line(quantile50, color = 'grey')
+      q50 = filter(dat(), simulation == 'q50')
+      g = g + geom_line(data=q50, aes(x = year, y = amount/1000000), color = 'black', size = 1)
     }
     if ('3' %in% input$quantile) {
-      g = g + geom_line(quantile90, color = 'yellow')
+      q90 = filter(dat(), simulation == 'q90')
+      g = g + geom_line(data=q90, aes(x = year, y = amount/1000000), color = 'black', size = 1)
     }
+    
+    
     g + theme_minimal()
   })
   
