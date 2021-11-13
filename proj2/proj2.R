@@ -92,19 +92,12 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  # you may need to create reactive objects
-  # (e.g. data frame to be used for graphing purposes)
   dat <- reactive({
     set.seed(input$seed)
     
     simulations = as.list(1:input$num_simulation)
     names(simulations) = paste0("sim", 1:input$num_simulation)
-    'interest_rate = rnorm(n = input$num_simulation,
-                          mean = input$annual_return,
-                          sd = input$return_volatility)
-    inflation_rate = rnorm(n = input$num_simulation,
-                           mean = input$annual_inflation,
-                           sd = input$inflation_volatility)'
+
     amount_withdraw = input$balance * input$withdrawal * 0.01
     years = 100-input$age
     
@@ -153,7 +146,6 @@ server <- function(input, output) {
         add_column(q90 = quantile90)
     }
     
-    print(raw_data)
     
     pivot_longer(
       raw_data,
@@ -165,20 +157,30 @@ server <- function(input, output) {
   
   
   # code for graph
-  # (e.g. reactive data frame used for graphing purposes)
   output$timeline <- renderPlot({
-    # replace the code below with your code!!!
-      ggplot(data = dat(), aes(x = year, y = amount, group = simulation)) +
-      geom_point(aes(color = simulation)) + 
+    g = ggplot(data = dat(), aes(x = year, y = amount/1000000, group = simulation)) +
+      labs(x = 'year till 100', y = 'amount in Million') +
       geom_line(aes(color = simulation)) + 
-      geom_hline(yintercept = 0, linetype = 'dashed', color = 'red', size = 1) +
-      theme_minimal()
+      geom_hline(yintercept = 0, linetype = 'dashed', color = 'red', size = 1)
+    
+    if (is.null(input$quantile)) {
+      g = g + geom_line(aes(color = simulation))
+    }
+    if ('1' %in% input$quantile) {
+      g = g + geom_line(quantile10, color = 'yellow')
+    }
+    if ('2' %in% input$quantile) {
+      g = g + geom_line(quantile50, color = 'grey')
+    }
+    if ('3' %in% input$quantile) {
+      g = g + geom_line(quantile90, color = 'yellow')
+    }
+    g + theme_minimal()
   })
   
   
   # code for statistics
   output$table <- renderPrint({
-    # replace the code below with your code!!!
     summary(dat())
   })
   
@@ -186,11 +188,6 @@ server <- function(input, output) {
   
 }
 
-
-
-# ===============================================
-# Run the application
-# ===============================================
 
 shinyApp(ui = ui, server = server)
 
