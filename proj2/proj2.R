@@ -1,7 +1,7 @@
 library(tidyverse)
 library(shiny)
 library(ggplot2)
-library(plotly)
+
 
 ui <- fluidPage(
   
@@ -131,6 +131,7 @@ server <- function(input, output) {
       ggplot(data = dat(), aes(x = year, y = amount, group = simulation)) +
       geom_point(aes(color = simulation)) + 
       geom_line(aes(color = simulation)) + 
+      geom_hline(yintercept = 0, linetype = 'dashed', color = 'red', size = 1) +
       theme_minimal()
   })
   
