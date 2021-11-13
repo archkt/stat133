@@ -138,15 +138,21 @@ server <- function(input, output) {
     raw_data = data.frame(simulations)
     raw_data$year = 0:years
     
+    mat = t(as.matrix(raw_data[,1:input$num_simulation]))
+    
+
+    
     for(i in 0:years+1) {
-      year_balance = raw_data[i,1:input$num_simulation]
+      year_balance = as.vector(mat[,i])
       quantile10[i] = quantile(year_balance, 0.1)
-      #quantile50[i] = quantile(year_balance, 0.5)
-      #quantile90[i] = quantile(year_balance, 0.9)
+      quantile50[i] = quantile(year_balance, 0.5)
+      quantile90[i] = quantile(year_balance, 0.9)
     }
+    
+    print(quantile10)
   
     raw_data = add_quantile(raw_data, input$quantile)
-    print(raw_data)
+    
     pivot_longer(
       raw_data,
       cols = starts_with("sim"),
