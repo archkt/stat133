@@ -7,18 +7,7 @@ quantile50 = c()
 quantile90 = c()
 
 add_quantile = function(data, checkbox) {
-  if ('1' %in% checkbox) {
-    data = data %>%
-      add_column(q10 = quantile10)
-  }
-  if ('2' %in% checkbox) {
-    data = data %>%
-      add_column(q50 = quantile50)
-  }
-  if ('3' %in% checkbox) {
-    data = data %>%
-      add_column(q90 = quantile90)
-  }
+  
   return(data)
 }
 
@@ -149,13 +138,26 @@ server <- function(input, output) {
       quantile90[i] = quantile(year_balance, 0.9)
     }
     
-    print(quantile10)
+    #print(quantile10)
   
-    raw_data = add_quantile(raw_data, input$quantile)
+    if ('1' %in% input$quantile) {
+      raw_data = raw_data %>%
+        add_column(q10 = quantile10)
+    }
+    if ('2' %in% input$quantile) {
+      raw_data = raw_data %>%
+        add_column(q50 = quantile50)
+    }
+    if ('3' %in% input$quantile) {
+      raw_data = raw_data %>%
+        add_column(q90 = quantile90)
+    }
+    
+    print(raw_data)
     
     pivot_longer(
       raw_data,
-      cols = starts_with("sim"),
+      cols = starts_with("sim") | starts_with("q"),
       names_to = "simulation",
       values_to = "amount"
     )
