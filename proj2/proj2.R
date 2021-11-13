@@ -2,6 +2,33 @@ library(tidyverse)
 library(shiny)
 library(ggplot2)
 
+quantile10 = c()
+quantile50 = c()
+quantile90 = c()
+
+calculate_quantile = function(vec, p) {
+  res = c()
+  for(i in 1:length(data)) {
+    res[i] = quantile(vec, p)
+  }
+  return(res)
+}
+
+add_quantile = function(data, checkbox) {
+  if ('1' %in% checkbox) {
+    data = data %>%
+      add_column(q10 = quantile10)
+  }
+  if ('2' %in% checkbox) {
+    data = data %>%
+      add_column(q50 = quantile50)
+  }
+  if ('3' %in% checkbox) {
+    data = data %>%
+      add_column(q90 = quantile90)
+  }
+  return(data)
+}
 
 ui <- fluidPage(
   
@@ -53,6 +80,7 @@ ui <- fluidPage(
                         min = 0,
                         max = 100,
                         value = 3.5)
+           
     ),
     
     # Inputs for number of simulations, and random seed
@@ -64,7 +92,10 @@ ui <- fluidPage(
                        value = 50),
            numericInput(inputId = "seed",
                         label = "Random seed:",
-                        value = 12345)
+                        value = 12345),
+           checkboxGroupInput(inputId = "quantile",
+                              label="Show quantile",
+                              choices = list("q10" = 1, "q50" = 2, "q90" = 3))
     )
   ),
   
@@ -114,6 +145,8 @@ server <- function(input, output) {
     
     raw_data = data.frame(simulations)
     raw_data$year = 0:years
+    
+    raw_data = add_quantile(raw_data, input$quantile)
     
     pivot_longer(
       raw_data,
