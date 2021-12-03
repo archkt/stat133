@@ -12,7 +12,8 @@
 # ===============================================
 library(tidyverse)
 library(tidytext)
-
+library(shiny)
+library(wordcloud)
 
 # ===============================================
 # Import data
@@ -84,12 +85,12 @@ ui <- fluidPage(
   tabsetPanel(type = "tabs",
               tabPanel("Word Frequency Analysis",
                        h3("Result"),
-                       plotOutput("barplot"),
+                       plotOutput("word_frequency_graph"),
                        hr(),
-                       dataTableOutput('table1')),
+                       dataTableOutput('word_frequency_table')),
               tabPanel("Sentiment Analysis", 
                        h3("Result"),
-                       plotOutput("histogram"),
+                       plotOutput("cloud"),
                        hr(),
                        verbatimTextOutput('table2'))
   )
@@ -141,23 +142,14 @@ server <- function(input, output) {
     partial_data
   })
   
-  token_first_n <- reactive({
+  
+  sentiment_data <- reactive({
+
+    cloud_words <- token_data() %>%
+      inner_join(sentiments, by = "word") %>%
+      reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
     
-    #return
-    token_data() %>%
-      arrange(desc(n)) %>%
-      slice_head(n = input$widget_output_number)
-  })
-  
-  token_year_range <- reactive ({
-    token_data() %>%
-      filter(year >= input$widget_min_year) %>%
-      filter(year <= input$widget_max_year)
-  })
-  
-  
-  dat_freq <- reactive({
-    dat %>% group_by(sex) %>% count()
+    cloud_words
   })
   
   
@@ -165,9 +157,9 @@ server <- function(input, output) {
   # Outputs for the first TAB
   # ===============================================
   
-  # code for barplot
-  output$barplot <- renderPlot({
-    ggplot(data = token_data(), aes(x = reorder(word, -n), y = n)) +
+  # code for word_frequency_graph
+  output$word_frequency_graph <- renderPlot({
+    ggplot(data = token_data(), aes(x = reorder(word, n), y = n)) +
       geom_col() +
       labs(title = paste0("Top ", input$widget_output_number," frequent words for album: ", input$widget_select_album),
            subtitle = input$widget_stopword) +
@@ -177,7 +169,7 @@ server <- function(input, output) {
   })
   
   # code for numeric summaries of frequencies
-  output$table1 <- renderDataTable({
+  output$word_frequency_table <- renderDataTable({
     token_data()
   })
   
@@ -187,11 +179,17 @@ server <- function(input, output) {
   # ===============================================
   
   # code for histogram
-  output$histogram <- renderPlot({
+  output$cloud <- renderPlot({
     # replace the code below with your code!!!
-    ggplot(data = dat, aes(x = height)) +
-      geom_histogram(binwidth = 20)
+    
+    comparison.cloud(sentiment_data(),
+                     colors = c("tomato", "turquoise3"))
   })
+  #####################################
+
+  
+  
+  #######################################
   
   # code for statistics
   output$table2 <- renderPrint({

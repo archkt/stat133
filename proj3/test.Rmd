@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)  
 library(tidytext)   
 library(janeaustenr)
-
+library(textdata)
+library(wordcloud)
 ```
 
 ## R Markdown
@@ -46,8 +47,9 @@ token_data = data %>%
   anti_join(stop_words, by = "word")
 
 token_freq = token_data %>%
-  count(word, sort = TRUE) %>%
+  count( word, sort = TRUE) %>%
   ungroup()
+
 
 
 token_top20 = token_freq %>%
@@ -60,15 +62,22 @@ token_top20
 #      geom_col()
 
 
-ggplot(data = token_top20, aes(x = word, y = n)) +
-      geom_col()
-
 ```
 
 
 ```{r}
 
-data %>%
-  filter(year >= 1998) %>%
-  filter(year<= 2005)
+#token_freq %>%
+#  inner_join(sentiments, by = "word") %>%
+#  ungroup()
+
+words <- token_freq %>%
+  inner_join(sentiments, by = "word") %>%
+  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
+
+
+comparison.cloud(words,
+                 colors = c("tomato", "turquoise3"),
+                 max.words = 100)
+  
 ```
