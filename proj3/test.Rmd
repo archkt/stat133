@@ -19,5 +19,14 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 ```{r}
 data <- read.csv('u2-lyrics.csv')
-data
+
+distinct_album = c('All', unique(data$album))
+temp = c(1:length(distinct_album))
+temp
+```
+
+```{r}
+#setNames(as.list(c(1, 2)), c("foo", "bar"))
+setNames(as.list(distinct_album), distinct_album)
+#list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3)
 ```

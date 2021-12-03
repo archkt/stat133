@@ -22,10 +22,11 @@ library(tidytext)
 data <- read.csv('u2-lyrics.csv')
 dat <- dplyr::starwars
 
-
 # ===============================================
-# tokenization
-# ===============================================
+# Initializing static data
+distinct_album = c('All', unique(data$album))
+temp = c(1:length(distinct_album))
+album_list = setNames(as.list(distinct_album), distinct_album)
 
 
 # ===============================================
@@ -50,8 +51,8 @@ ui <- fluidPage(
            sliderInput(inputId = "widget_output_number",
                        label = "Number of outputs",
                        min = 1,
-                       max = 20,
-                       value = 1)
+                       max = 50,
+                       value = 20)
     ),
     
     # replace with your widgets
@@ -69,14 +70,10 @@ ui <- fluidPage(
     
     # replace with your widgets
     column(3,
-           sliderInput(inputId = "binwidth",
-                       label = "Binwidth",
-                       min = 1,
-                       max = 20,
-                       value = 1),
-           checkboxInput(inputId = "facets",
-                         label = strong("Facet by letter"),
-                         value = FALSE)
+           selectInput(inputId = "widget_select_album",
+                       label = "Select Album",
+                       choices = album_list,
+                       selected = 'All')
     )
   ),
   hr(),
@@ -88,7 +85,7 @@ ui <- fluidPage(
                        hr(),
                        dataTableOutput('table1')),
               tabPanel("Analysis2", 
-                       h3("What kind of analysis2"),
+                       h3("Result"),
                        plotOutput("histogram"),
                        hr(),
                        verbatimTextOutput('table2'))
