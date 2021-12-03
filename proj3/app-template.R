@@ -41,8 +41,8 @@ ui <- fluidPage(
     column(3,
            radioButtons(inputId = "widget_stopword", 
                         label = "Including Stopwords", 
-                        choices = c("Yes" = "opt1",
-                                    "No" = "opt2"), 
+                        choices = c("Yes" = "include",
+                                    "No" = "not include"), 
                         selected = "opt1")
     ),
     
@@ -99,8 +99,23 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  # you may need to create reactive objects
-  # (e.g. data frame to be used in barchart)
+  # Lyrics token data by input
+  token_data <- reactive({
+    partial_data = data
+    
+    if (input$widget_stopword == "include"){
+      partial_data = data %>% 
+        unnest_tokens(output = word, input = lyrics)
+    } else {
+      partial_data = data %>% 
+        unnest_tokens(output = word, input = lyrics) %>%
+        anti_join(stop_words, by = "word")
+    }
+    
+    partial_data
+  })
+  
+  
   dat_freq <- reactive({
     dat %>% group_by(sex) %>% count()
   })

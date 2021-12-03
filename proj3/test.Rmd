@@ -7,6 +7,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)  
+library(tidytext)   
+library(janeaustenr)
+
+```
+
 ## R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
@@ -22,11 +29,27 @@ data <- read.csv('u2-lyrics.csv')
 
 distinct_album = c('All', unique(data$album))
 temp = c(1:length(distinct_album))
-temp
+#temp
+data
 ```
 
 ```{r}
 #setNames(as.list(c(1, 2)), c("foo", "bar"))
 setNames(as.list(distinct_album), distinct_album)
 #list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3)
+```
+
+```{r}
+tidy_books = austen_books() %>%
+  unnest_tokens(output = word, input = text) %>%
+  anti_join(stop_words, by = "word")
+head(tidy_books)
+```
+
+
+```{r}
+tidy_books = data %>%
+  unnest_tokens(output = word, input = lyrics) %>%
+  anti_join(stop_words, by = "word")
+
 ```
