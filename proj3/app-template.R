@@ -108,12 +108,13 @@ server <- function(input, output) {
         anti_join(stop_words, by = "word")
     }
     
-    partial_data <- partial_data %>%
-      count(word, sort = TRUE) %>%
-      ungroup() %>%
-      arrange(desc(n)) %>%
-      slice_head(n = input$widget_output_number)
+
     
+    partial_data = partial_data %>%
+      count(word, sort = TRUE) %>%
+      ungroup()
+    
+    #return
     partial_data
   })
   
@@ -121,6 +122,8 @@ server <- function(input, output) {
     token_n = token_data() %>%
       arrange(desc(n)) %>%
       slice_head(n = input$widget_output_number)
+    
+    #return
     token_n
   })
   
@@ -137,8 +140,11 @@ server <- function(input, output) {
   # code for barplot
   output$barplot <- renderPlot({
     # replace the code below with your code!!!
-    ggplot(data = token_data(), aes(x = word, y = n)) +
-      geom_col()
+    ggplot(data = token_first_n(), aes(x = reorder(word, -n), y = n)) +
+      geom_col() +
+      labs(title = paste0("Top ",input$widget_output_number," frequent words")) +
+      xlab("word") + 
+      ylab("count")
   })
   
   # code for numeric summaries of frequencies

@@ -46,7 +46,8 @@ token_data = data %>%
   anti_join(stop_words, by = "word")
 
 token_freq = token_data %>%
-  count(album, word, sort = TRUE)
+  count(word, sort = TRUE) %>%
+  ungroup()
 
 
 token_top20 = token_freq %>%
@@ -57,5 +58,9 @@ token_top20
 #counting_data
 #ggplot(data = head(counting_data), aes(x = word, y = n)) +
 #      geom_col()
+
+
+ggplot(data = token_top20, aes(x = word, y = n)) +
+      geom_col()
 
 ```
