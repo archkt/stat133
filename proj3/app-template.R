@@ -176,8 +176,7 @@ server <- function(input, output) {
   
   # code for numeric summaries of frequencies
   output$table1 <- renderDataTable({
-    # replace the code below with your code!!!
-    dat_freq()
+    token_data()
   })
   
   
