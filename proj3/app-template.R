@@ -67,7 +67,6 @@ ui <- fluidPage(
                         min = min_year,
                         max = max_year,
                         step = 1),
-           
            p(em(paste0("default: ", min_year, "-", max_year)))
            
     ),
@@ -76,7 +75,8 @@ ui <- fluidPage(
            selectInput(inputId = "widget_select_album",
                        label = "Select Album",
                        choices = album_list,
-                       selected = 'All')
+                       selected = 'All'),
+           p(em("RECOMMEND: Set year back to default"))
     )
   ),
   hr(),
@@ -121,6 +121,14 @@ server <- function(input, output) {
     partial_data <- partial_data %>%
       filter(year >= input$widget_min_year) %>%
       filter(year <= input$widget_max_year)
+    
+    # widget_select_album logic
+    if (input$widget_select_album == 'All'){
+      
+    } else {
+      partial_data <- partial_data %>%
+        filter(album == input$widget_select_album)
+    }
 
     # widget_output_number logic
     partial_data <- partial_data %>%
@@ -161,7 +169,7 @@ server <- function(input, output) {
   output$barplot <- renderPlot({
     ggplot(data = token_data(), aes(x = reorder(word, -n), y = n)) +
       geom_col() +
-      labs(title = paste0("Top ",input$widget_output_number," frequent words")) +
+      labs(title = paste0("Top ", input$widget_output_number," frequent words for album: ", input$widget_select_album)) +
       xlab("word") + 
       ylab("count")
   })
