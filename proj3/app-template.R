@@ -40,9 +40,9 @@ ui <- fluidPage(
     column(3,
            radioButtons(inputId = "widget_stopword", 
                         label = "Including Stopwords", 
-                        choices = c("Yes" = "include",
-                                    "No" = "not include"), 
-                        selected = "include")
+                        choices = c("Yes" = "(include stopwords)",
+                                    "No" = "(not include stopwords)"), 
+                        selected = "(include stopwords)")
     ),
     
     column(3,
@@ -108,7 +108,7 @@ server <- function(input, output) {
     partial_data = data
     
     # widget_stopword logic
-    if (input$widget_stopword == "include"){
+    if (input$widget_stopword == "(include stopwords)"){
       partial_data = data %>% 
         unnest_tokens(output = word, input = lyrics)
     } else {
@@ -169,9 +169,11 @@ server <- function(input, output) {
   output$barplot <- renderPlot({
     ggplot(data = token_data(), aes(x = reorder(word, -n), y = n)) +
       geom_col() +
-      labs(title = paste0("Top ", input$widget_output_number," frequent words for album: ", input$widget_select_album)) +
+      labs(title = paste0("Top ", input$widget_output_number," frequent words for album: ", input$widget_select_album),
+           subtitle = input$widget_stopword) +
       xlab("word") + 
-      ylab("count")
+      ylab("count") + 
+      coord_flip()
   })
   
   # code for numeric summaries of frequencies
