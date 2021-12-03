@@ -1,0 +1,268 @@
+---
+title: "Lab 13: More Regular Expressions"
+subtitle: "Stat 133, Fall 2021"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+> ### Learning Objectives
+>
+> - String manipulation
+> - Base R functions for strings
+> - Work with the package `"stringr"`
+> - String manipulation
+> - More practice with regular expressions
+
+
+### General Instructions
+
+- Write your descriptions, explanations, and code in an `Rmd` (R markdown) file.
+- Name this file as `lab13-first-last.Rmd`, where `first` and `last` are your
+first and last names (e.g. `lab13-gaston-sanchez.Rmd`).
+- Knit your `Rmd` file as an html document (default option).
+- Submit your `Rmd` and `html` files to bCourses, in the corresponding lab assignment.
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+------
+
+## Data "Emotion in Text"
+
+You'll be working with the data file `text-emotion.csv` available in bCourses,
+in the folder containing this `Rmd`.
+
+The original source is the data set "Emotion in Text" from the website
+Crowd Flower Data for Everyone https://www.crowdflower.com/data-for-everyone/
+
+```{r}
+# assuming data file is in the same directory of your Rmd
+tweets <- read.csv('text-emotion.csv', stringsAsFactors = FALSE)
+```
+
+The file contains four columns:
+
+- `tweet_id`: tweet identifier
+- `sentiment`: class or sentiment label
+- `author`: username author of the tweet
+- `content`: content of the tweet
+
+
+Also, while you work on this lab you may want to look at the cheat-sheets for:
+
+- `"stringr"` cheatsheet (see bCourses)
+
+- regular-expressions cheatsheet (see bCourses)
+
+
+-----
+
+
+### 1.1) Author (usernames)
+
+According to Twitter, usernames: 
+
+- cannot be longer than 15 characters
+
+- can only contain alphanumeric characters (letters A-Z, numbers 0-9) with the 
+exception of underscores (i.e. cannot contain any symbols, dashes or spaces, 
+except underscores)
+
+- _If you want to know more about twitter usernames, visit:_
+
+https://help.twitter.com/en/managing-your-account/twitter-username-rules
+
+
+### 1.2) Your Turn: author names
+
+Confirm that the values in column `author` follow each of the rules for valid usernames:
+
+a) No longer than 15 characters _(if you find usernames longer than 15 characters, display them)_
+
+```{r}
+# your code
+which(tweets %>% str_detect(tweets$author, "[:alpha:]{1,15}") == FALSE)
+
+```
+
+
+b) Contain alphanumeric characters and underscores. If you find usernames containing other symbols, display them. _Hint_: The non-word character class is `"\\W"` is your friend.
+
+```{r}
+# your code
+
+```
+
+
+c) What is the number of characters of the shortest usernames? And what are the names of these authors? _(write commands to answer these questions)_
+
+```{r}
+# your code
+
+```
+
+
+-----
+
+
+### 2) Your Turn: Various Symbols and Strings
+
+Tweets contain all sorts of symbols: `!`, `?`, `%`, `$`, etc.
+
+a) How many tweets contain at least one caret symbol `"^"` _(write a command to answer this question)_.
+
+```{r}
+# your code
+
+```
+
+
+b) How many tweets contain three or more consecutive dollar symbols `"$"` _(write a command to answer this question)_.
+
+```{r}
+# your code
+
+```
+
+
+c) How many tweets do NOT contain the characters `"a"` or `"A"` _(write a command to answer this question)_.
+
+```{r}
+# your code
+
+```
+
+
+d) Display the first 10 elements of the tweets that do NOT contain the characters `"a"` or `"A"` _(write a command to answer this question)_.
+
+```{r}
+# your code
+
+```
+
+
+e) Number of exclamation symbols `"!"`: compute a vector with the number of exclamation symbols in each tweet, and display its `summary()`.
+
+```{r}
+# your code
+
+```
+
+
+f) What's the tweet (content) with the largest number of exclamation symbols `!`? Display its content. _(write a command to answer this question)_
+
+```{r}
+# your code
+
+```
+
+
+-----
+
+
+### 3) Your Turn: Valid Hashtags
+
+People use the hashtag symbol `#` before a relevant keyword or phrase in their 
+tweet to categorize those Tweets and help them show more easily in Twitter 
+search. According to Twitter, hashtags cannot contain spaces or punctuation 
+symbols, and cannot start with or use only numbers.
+
+a) Count the number of (valid) hashtags in the tweet contents, and display a 
+frequency `table()` of such counts.
+
+```{r}
+# your code
+
+```
+
+
+b) Display such frequencies, and make a barplot of these counts
+(i.e. number of tweets with 0 hashtags, with 1 hashtag, with 2 hashtags, etc).
+
+```{r}
+# your code
+
+```
+
+
+c) What is the average length of the unique hashtags? Do not count the hash `#`
+symbol when determining the length.
+
+```{r}
+# your code
+
+```
+
+
+d) What is the most common length (i.e. the mode) of the hashtags?
+
+```{r}
+# your code
+
+```
+
+
+-----
+
+
+### 4) Tweets with OMG and omg
+
+How many tweets contain the _individual_ strings `"omg"` or `"OMG"` _(write a command to answer this question)_. For example:
+
++ `omg I just saw them again`  (this would be a match)
++ `OMG I just saw them again`  (this would be a match)
++ `I just saw them again omg`  (this would be a match)
++ `I just saw them again OMG`  (this would be a match)
++ `I just saw them omg can't believe it`  (this would be a match)
++ `I just saw them OMG can't believe it`  (this would be a match)
++ `omg: I just saw them again`  (this would NOT be a match)
++ `OMG,I just saw them again`  (this would NOT be a match)
++ `I just saw them again omg!!!`  (this would NOT be a match)
++ `I just saw them again omgomgomg`  (this would NOT be a match)
++ `I just saw them again lol-omg!!!`  (this would NOT be a match)
+
+```{r}
+# your code
+
+```
+
+
+-----
+
+
+### 5.1) Table of Average Number of Patterns by Sentiment
+
+The following diagram depicts a table in which the rows represent each of the
+unique sentiments, and the columns represent averages of various patterns.
+
+```{r out.width='80%', echo = FALSE, fig.align='center'}
+knitr::include_graphics('tweet-sentiment-freqs.png')
+```
+
+
+### 5.2) Your Turn: Average Patterns by Sentiment
+
+Write code to create  (and display) a table (e.g. data frame, tibble, matrix) 
+in which the rows correspond to the different types of sentiments, and the 
+columns correspond to: 
+
+1. average number of lower case letters
+2. average number of upper case letters
+3. average number of digits
+4. average number of punctuation symbols 
+5. average number of spaces 
+
+_Hint: POSIX character classes are your friends._
+
+```{r}
+# your code
+
+```
+

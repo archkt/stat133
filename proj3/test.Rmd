@@ -1,0 +1,83 @@
+---
+title: "test"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)  
+library(tidytext)   
+library(janeaustenr)
+library(textdata)
+library(wordcloud)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+data <- read.csv('u2-lyrics.csv')
+
+distinct_album = c('All', unique(data$album))
+temp = c(1:length(distinct_album))
+#temp
+data
+```
+
+```{r}
+#setNames(as.list(c(1, 2)), c("foo", "bar"))
+setNames(as.list(distinct_album), distinct_album)
+#list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3)
+```
+
+
+```{r}
+token_data = data %>%
+  unnest_tokens(output = word, input = lyrics) %>%
+  anti_join(stop_words, by = "word")
+
+token_freq = token_data %>%
+  count( word, sort = TRUE) %>%
+  ungroup()
+
+
+
+token_top20 = token_freq %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 20)
+
+token_top20
+#counting_data
+#ggplot(data = head(counting_data), aes(x = word, y = n)) +
+#      geom_col()
+
+
+```
+
+
+```{r}
+
+#token_freq %>%
+#  inner_join(sentiments, by = "word") %>%
+#  ungroup()
+
+words <- token_freq %>%
+  inner_join(sentiments, by = "word") %>%
+  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
+
+
+comparison.cloud(words,
+                 colors = c("tomato", "turquoise3"),
+                 max.words = 100)
+  
+```

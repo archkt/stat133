@@ -1,7 +1,11 @@
 library(tidyverse)
 library(shiny)
 library(ggplot2)
-library(plotly)
+library(rsconnect)
+
+quantile10 = c()
+quantile50 = c()
+quantile90 = c()
 
 ui <- fluidPage(
   
@@ -53,6 +57,7 @@ ui <- fluidPage(
                         min = 0,
                         max = 100,
                         value = 3.5)
+           
     ),
     
     # Inputs for number of simulations, and random seed
@@ -64,7 +69,10 @@ ui <- fluidPage(
                        value = 50),
            numericInput(inputId = "seed",
                         label = "Random seed:",
-                        value = 12345)
+                        value = 12345),
+           checkboxGroupInput(inputId = "quantile",
+                              label="Show quantile",
+                              choices = list("q10" = 1, "q50" = 2, "q90" = 3))
     )
   ),
   
@@ -74,25 +82,26 @@ ui <- fluidPage(
   
   hr(),
   h4('Overall statistics'),
-  verbatimTextOutput('table')
+  verbatimTextOutput('table'),
+  
+  hr(),
+  h4('Quantiles'),
+  tabsetPanel(
+    tabPanel("q10", verbatimTextOutput("q10")), 
+    tabPanel("q50", verbatimTextOutput("q50")), 
+    tabPanel("q90", verbatimTextOutput("q90"))
+  )
 )
 
 
 server <- function(input, output) {
   
-  # you may need to create reactive objects
-  # (e.g. data frame to be used for graphing purposes)
   dat <- reactive({
     set.seed(input$seed)
     
     simulations = as.list(1:input$num_simulation)
     names(simulations) = paste0("sim", 1:input$num_simulation)
-    'interest_rate = rnorm(n = input$num_simulation,
-                          mean = input$annual_return,
-                          sd = input$return_volatility)
-    inflation_rate = rnorm(n = input$num_simulation,
-                           mean = input$annual_inflation,
-                           sd = input$inflation_volatility)'
+
     amount_withdraw = input$balance * input$withdrawal * 0.01
     years = 100-input$age
     
@@ -118,42 +127,89 @@ server <- function(input, output) {
     raw_data = data.frame(simulations)
     raw_data$year = 0:years
     
+    mat = t(as.matrix(raw_data[,1:input$num_simulation]))
+    
+    for(i in 0:years+1) {
+      year_balance = as.vector(mat[,i])
+      quantile10[i] = quantile(year_balance, 0.1)
+      quantile50[i] = quantile(year_balance, 0.5)
+      quantile90[i] = quantile(year_balance, 0.9)
+    }
+    
+    raw_data = raw_data %>%
+      add_column(q10=quantile10)
+    raw_data = raw_data %>%
+      add_column(q50=quantile50)
+    raw_data = raw_data %>%
+      add_column(q90=quantile90)
+
+
     pivot_longer(
       raw_data,
-      cols = starts_with("sim"),
+      cols = starts_with("sim") | starts_with("q"),
       names_to = "simulation",
       values_to = "amount"
     )
   })
   
-  
   # code for graph
-  # (e.g. reactive data frame used for graphing purposes)
   output$timeline <- renderPlot({
+<<<<<<< HEAD
     # replace the code below with your code!!!
       ggplot(data = dat(), aes(x = year, y = amount/input$balance, group = simulation)) +
       labs(x= 'Years till reaching age 100', y='Portfolio balance (millions)') +
       geom_point(aes(color = simulation)) + 
       geom_line(aes(color = simulation)) + 
       theme_minimal()
+=======
+    g = ggplot(data = dat(), aes(x = year, y = amount/1000000, group = simulation)) +
+      labs(x = 'year till 100', y = 'amount in Million') +
+      geom_hline(yintercept = 0, linetype = 'dashed', color = 'red', size = 1) + 
+      geom_line(aes(color = simulation))
+    
+    if (is.null(input$quantile)) {
+      g = g + geom_line(aes(color = simulation))
+    }
+    if ('1' %in% input$quantile) {
+      q10 = filter(dat(), simulation == 'q10')
+      g = g + geom_line(data=q10, aes(x = year, y = amount/1000000), color = 'black', size = 1)
+    }
+    if ('2' %in% input$quantile) {
+      q50 = filter(dat(), simulation == 'q50')
+      g = g + geom_line(data=q50, aes(x = year, y = amount/1000000), color = 'black', size = 1)
+    }
+    if ('3' %in% input$quantile) {
+      q90 = filter(dat(), simulation == 'q90')
+      g = g + geom_line(data=q90, aes(x = year, y = amount/1000000), color = 'black', size = 1)
+    }
+    
+    
+    g + theme_minimal()
+>>>>>>> 7267beef3446aa5387456a9ffa31bedb457175cf
   })
   
   
   # code for statistics
   output$table <- renderPrint({
-    # replace the code below with your code!!!
     summary(dat())
+    
   })
+  
+  output$q10 <- renderPrint({
+    summary(filter(dat(), simulation == 'q10'))
+  })
+  output$q50 <- renderPrint({
+    summary(filter(dat(), simulation == 'q50'))
+  })
+  output$q90 <- renderPrint({
+    summary(filter(dat(), simulation == 'q90'))
+  })
+
   
   
   
 }
 
-
-
-# ===============================================
-# Run the application
-# ===============================================
 
 shinyApp(ui = ui, server = server)
 
