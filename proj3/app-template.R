@@ -56,8 +56,10 @@ ui <- fluidPage(
                           label = "Date range",
                           start = NULL,
                           end = NULL,
-                          min = NULL,
-                          max = NULL),
+                          min = min(data$year),
+                          max = max(data$year),
+                          startview = "decade"),
+           
            actionButton(inputId = "widget_action",
                         label = "Set to Default")
            
@@ -119,12 +121,15 @@ server <- function(input, output) {
   })
   
   token_first_n <- reactive({
-    token_n = token_data() %>%
-      arrange(desc(n)) %>%
-      slice_head(n = input$widget_output_number)
     
     #return
-    token_n
+    token_data() %>%
+      arrange(desc(n)) %>%
+      slice_head(n = input$widget_output_number)
+  })
+  
+  token_in_range <- reactive ({
+    
   })
   
   
@@ -134,12 +139,11 @@ server <- function(input, output) {
   
   
   # ===============================================
-  # Outputs for the first TAB (i.e. barchart)
+  # Outputs for the first TAB
   # ===============================================
   
   # code for barplot
   output$barplot <- renderPlot({
-    # replace the code below with your code!!!
     ggplot(data = token_first_n(), aes(x = reorder(word, -n), y = n)) +
       geom_col() +
       labs(title = paste0("Top ",input$widget_output_number," frequent words")) +

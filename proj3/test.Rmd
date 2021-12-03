@@ -64,3 +64,9 @@ ggplot(data = token_top20, aes(x = word, y = n)) +
       geom_col()
 
 ```
+
+
+```{r}
+min(data$year)
+max(data$year)
+```
