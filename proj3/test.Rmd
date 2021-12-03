@@ -39,17 +39,16 @@ setNames(as.list(distinct_album), distinct_album)
 #list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3)
 ```
 
-```{r}
-tidy_books = austen_books() %>%
-  unnest_tokens(output = word, input = text) %>%
-  anti_join(stop_words, by = "word")
-head(tidy_books)
-```
-
 
 ```{r}
-tidy_books = data %>%
+token_data = data %>%
   unnest_tokens(output = word, input = lyrics) %>%
   anti_join(stop_words, by = "word")
+
+counting = token_data %>% count(word)
+counting
+#counting_data
+#ggplot(data = head(counting_data), aes(x = word, y = n)) +
+#      geom_col()
 
 ```

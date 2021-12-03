@@ -43,7 +43,7 @@ ui <- fluidPage(
                         label = "Including Stopwords", 
                         choices = c("Yes" = "include",
                                     "No" = "not include"), 
-                        selected = "opt1")
+                        selected = "include")
     ),
     
     # replace with your widgets
@@ -128,7 +128,7 @@ server <- function(input, output) {
   # code for barplot
   output$barplot <- renderPlot({
     # replace the code below with your code!!!
-    ggplot(data = dat_freq(), aes(x = sex, y = n)) +
+    ggplot(data = token_data() %>% count(word), aes(x = word, y = n)) +
       geom_col()
   })
   
