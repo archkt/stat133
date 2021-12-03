@@ -67,6 +67,8 @@ ggplot(data = token_top20, aes(x = word, y = n)) +
 
 
 ```{r}
-min(data$year)
-max(data$year)
+
+data %>%
+  filter(year >= 1998) %>%
+  filter(year<= 2005)
 ```

@@ -26,6 +26,8 @@ distinct_album = c('All', unique(data$album))
 temp = c(1:length(distinct_album))
 album_list = setNames(as.list(distinct_album), distinct_album)
 
+min_year = min(data$year)
+max_year = max(data$year)
 
 # ===============================================
 # Define UserInterface "ui" for application
@@ -52,16 +54,21 @@ ui <- fluidPage(
     ),
     
     column(3,
-           dateRangeInput(inputId = "widget_date_range",
-                          label = "Date range",
-                          start = NULL,
-                          end = NULL,
-                          min = min(data$year),
-                          max = max(data$year),
-                          startview = "decade"),
+           numericInput(inputId = "widget_min_year",
+                        label = "Year after(default)",
+                        value = min_year,
+                        min = min_year,
+                        max = max_year,
+                        step = 1),
            
-           actionButton(inputId = "widget_action",
-                        label = "Set to Default")
+           numericInput(inputId = "widget_max_year",
+                        label = "Year before",
+                        value = max_year,
+                        min = min_year,
+                        max = max_year,
+                        step = 1),
+           
+           p(em(paste0("default: ", min_year, "-", max_year)))
            
     ),
     
@@ -110,11 +117,17 @@ server <- function(input, output) {
         anti_join(stop_words, by = "word")
     }
     
+    # widget_year_range logic
+    partial_data <- partial_data %>%
+      filter(year >= input$widget_min_year) %>%
+      filter(year <= input$widget_max_year)
 
-    
-    partial_data = partial_data %>%
+    # widget_output_number logic
+    partial_data <- partial_data %>%
       count(word, sort = TRUE) %>%
-      ungroup()
+      ungroup() %>%
+      arrange(desc(n)) %>%
+      slice_head(n = input$widget_output_number)
     
     #return
     partial_data
@@ -128,8 +141,10 @@ server <- function(input, output) {
       slice_head(n = input$widget_output_number)
   })
   
-  token_in_range <- reactive ({
-    
+  token_year_range <- reactive ({
+    token_data() %>%
+      filter(year >= input$widget_min_year) %>%
+      filter(year <= input$widget_max_year)
   })
   
   
@@ -144,7 +159,7 @@ server <- function(input, output) {
   
   # code for barplot
   output$barplot <- renderPlot({
-    ggplot(data = token_first_n(), aes(x = reorder(word, -n), y = n)) +
+    ggplot(data = token_data(), aes(x = reorder(word, -n), y = n)) +
       geom_col() +
       labs(title = paste0("Top ",input$widget_output_number," frequent words")) +
       xlab("word") + 
