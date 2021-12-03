@@ -17,7 +17,7 @@ ui <- fluidPage(
            sliderInput(inputId = "age",
                        label = "Retirement Age:",
                        min = 30,
-                       max = 100,
+                       max = 99,
                        value = 60),
            numericInput(inputId = "withdrawal",
                        label = "Withdrawal rate(%)",
@@ -99,6 +99,7 @@ server <- function(input, output) {
     for (i in 1:input$num_simulation) {
       simulation = c(1:years+1)
       simulation[1] = input$balance
+       
       for (j in 1:years+1) {
         interest_rate = rnorm(n = 1,
                               mean = input$annual_return,
@@ -107,8 +108,10 @@ server <- function(input, output) {
                                mean = input$annual_inflation,
                                sd = input$inflation_volatility)
         simulation[j] = simulation[j-1] * (1 + interest_rate/100) - amount_withdraw * (1 + inflation_rate/100)
+
       }
       
+      print(simulation)
       simulations[[i]] = simulation
     }
     
@@ -128,7 +131,8 @@ server <- function(input, output) {
   # (e.g. reactive data frame used for graphing purposes)
   output$timeline <- renderPlot({
     # replace the code below with your code!!!
-      ggplot(data = dat(), aes(x = year, y = amount, group = simulation)) +
+      ggplot(data = dat(), aes(x = year, y = amount/input$balance, group = simulation)) +
+      labs(x= 'Years till reaching age 100', y='Portfolio balance (millions)') +
       geom_point(aes(color = simulation)) + 
       geom_line(aes(color = simulation)) + 
       theme_minimal()
