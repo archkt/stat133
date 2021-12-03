@@ -45,8 +45,15 @@ token_data = data %>%
   unnest_tokens(output = word, input = lyrics) %>%
   anti_join(stop_words, by = "word")
 
-counting = token_data %>% count(word)
-counting
+token_freq = token_data %>%
+  count(album, word, sort = TRUE)
+
+
+token_top20 = token_freq %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 20)
+
+token_top20
 #counting_data
 #ggplot(data = head(counting_data), aes(x = word, y = n)) +
 #      geom_col()

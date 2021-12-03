@@ -17,10 +17,8 @@ library(tidytext)
 # ===============================================
 # Import data
 # ===============================================
-# for demo purposes of the "template", we use data starwars
-# (but you will have to replace this with the data in "u2-lyrics.csv")
 data <- read.csv('u2-lyrics.csv')
-dat <- dplyr::starwars
+
 
 # ===============================================
 # Initializing static data
@@ -37,7 +35,6 @@ ui <- fluidPage(
   
   titlePanel("U2 lyrics analysis"),
   fluidRow(
-    # replace with your widgets
     column(3,
            radioButtons(inputId = "widget_stopword", 
                         label = "Including Stopwords", 
@@ -46,16 +43,14 @@ ui <- fluidPage(
                         selected = "include")
     ),
     
-    # replace with your widgets
     column(3,
            sliderInput(inputId = "widget_output_number",
                        label = "Number of outputs",
-                       min = 1,
+                       min = 2,
                        max = 50,
                        value = 20)
     ),
     
-    # replace with your widgets
     column(3,
            dateRangeInput(inputId = "widget_date_range",
                           label = "Date range",
@@ -68,7 +63,6 @@ ui <- fluidPage(
            
     ),
     
-    # replace with your widgets
     column(3,
            selectInput(inputId = "widget_select_album",
                        label = "Select Album",
@@ -99,10 +93,12 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  # Lyrics token data by input
+  # Lyrics token data by stopword input
   token_data <- reactive({
+    # initialize return data
     partial_data = data
     
+    # widget_stopword logic
     if (input$widget_stopword == "include"){
       partial_data = data %>% 
         unnest_tokens(output = word, input = lyrics)
@@ -112,7 +108,20 @@ server <- function(input, output) {
         anti_join(stop_words, by = "word")
     }
     
+    partial_data <- partial_data %>%
+      count(word, sort = TRUE) %>%
+      ungroup() %>%
+      arrange(desc(n)) %>%
+      slice_head(n = input$widget_output_number)
+    
     partial_data
+  })
+  
+  token_first_n <- reactive({
+    token_n = token_data() %>%
+      arrange(desc(n)) %>%
+      slice_head(n = input$widget_output_number)
+    token_n
   })
   
   
@@ -128,7 +137,7 @@ server <- function(input, output) {
   # code for barplot
   output$barplot <- renderPlot({
     # replace the code below with your code!!!
-    ggplot(data = token_data() %>% count(word), aes(x = word, y = n)) +
+    ggplot(data = token_data(), aes(x = word, y = n)) +
       geom_col()
   })
   
