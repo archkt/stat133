@@ -92,7 +92,7 @@ ui <- fluidPage(
                        h3("Result"),
                        plotOutput("cloud"),
                        hr(),
-                       verbatimTextOutput('table2'))
+                       dataTableOutput('sentiment_table'))
   )
 )
 
@@ -157,11 +157,15 @@ server <- function(input, output) {
   
   sentiment_data <- reactive({
 
-    cloud_words <- token_freq() %>%
+    cloud_words <- token_data() %>%
       inner_join(sentiments, by = "word") %>%
-      reshape2::acast(word ~ sentiment, fill = 0)
+      count(word, sentiment, sort = TRUE) %>%
+      arrange(desc(n)) %>%
+      slice_head(n = input$widget_output_number) %>%
+      reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
     
     cloud_words
+    print(cloud_words)
   })
   
   
@@ -182,7 +186,7 @@ server <- function(input, output) {
   
   # code for numeric summaries of frequencies
   output$word_frequency_table <- renderDataTable({
-    token_data()
+    token_freq()
   })
   
   
@@ -195,6 +199,7 @@ server <- function(input, output) {
     # replace the code below with your code!!!
     
     comparison.cloud(sentiment_data(),
+                     scale = c(5, 1),
                      colors = c("tomato", "turquoise3"))
   })
   #####################################
@@ -204,9 +209,9 @@ server <- function(input, output) {
   #######################################
   
   # code for statistics
-  output$table2 <- renderPrint({
+  output$sentiment_table <- renderDataTable({
     # replace the code below with your code!!!
-    summary(sentiment_data())
+    sentiment_data()
   })
   
 }
