@@ -71,13 +71,53 @@ token_top20
 #  inner_join(sentiments, by = "word") %>%
 #  ungroup()
 
-words <- token_freq %>%
+words <- token_data %>%
+  inner_join(sentiments, by = "word") #%>%
+#  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
+
+####################################
+austen_tokens <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, "^chapter [\\divxlc]"))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+#austen_tokens
+
+austen_words <- austen_tokens %>%
   inner_join(sentiments, by = "word") %>%
+  count(word, sentiment, sort = TRUE) %>%
   reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
 
+#austen_tokens
+#token_data
+#comparison.cloud(austen_words,
+#                 colors = c("tomato", "turquoise3"),
+#                 max.words = 100)
+  
+##################################
 
-comparison.cloud(words,
-                 colors = c("tomato", "turquoise3"),
-                 max.words = 100)
+token_data = data %>%
+  unnest_tokens(output = word, input = lyrics) %>%
+  anti_join(stop_words, by = "word")
+
+cloud_words <- token_data %>%
+      inner_join(sentiments, by = "word") %>%
+      reshape2::acast(word ~ sentiment, fill = 0)
+
+#token_data %>% count(word, sort = TRUE) %>%
+#      ungroup() %>%
+#      arrange(desc(n)) %>%
+#      slice_head(n = 20)
+#words
+cloud_words
+#token_data
+
+
+#comparison.cloud(austen_words,
+#                 colors = c("tomato", "turquoise3"),
+#                 max.words = 100)
   
 ```

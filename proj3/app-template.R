@@ -131,23 +131,35 @@ server <- function(input, output) {
         filter(album == input$widget_select_album)
     }
 
-    # widget_output_number logic
-    partial_data <- partial_data %>%
+    
+    partial_data
+    #partial_data <- partial_data %>%
+    #  count(word, sort = TRUE) %>%
+    #  ungroup() %>%
+    #  arrange(desc(n)) %>%
+    #  slice_head(n = input$widget_output_number)
+    #
+    ##return
+    #partial_data
+  })
+  
+  token_freq <- reactive({
+    # generate frequency table with applying widget_output_number logic
+    freq_data = token_data() %>%
       count(word, sort = TRUE) %>%
       ungroup() %>%
       arrange(desc(n)) %>%
       slice_head(n = input$widget_output_number)
     
-    #return
-    partial_data
+    freq_data
   })
   
   
   sentiment_data <- reactive({
 
-    cloud_words <- token_data() %>%
+    cloud_words <- token_freq() %>%
       inner_join(sentiments, by = "word") %>%
-      reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
+      reshape2::acast(word ~ sentiment, fill = 0)
     
     cloud_words
   })
@@ -159,7 +171,7 @@ server <- function(input, output) {
   
   # code for word_frequency_graph
   output$word_frequency_graph <- renderPlot({
-    ggplot(data = token_data(), aes(x = reorder(word, n), y = n)) +
+    ggplot(data = token_freq(), aes(x = reorder(word, n), y = n)) +
       geom_col() +
       labs(title = paste0("Top ", input$widget_output_number," frequent words for album: ", input$widget_select_album),
            subtitle = input$widget_stopword) +
@@ -194,7 +206,7 @@ server <- function(input, output) {
   # code for statistics
   output$table2 <- renderPrint({
     # replace the code below with your code!!!
-    summary(dat$height)
+    summary(sentiment_data())
   })
   
 }
