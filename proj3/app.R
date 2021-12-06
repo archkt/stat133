@@ -206,8 +206,8 @@ server <- function(input, output) {
     layout(matrix(1:2, nrow=2), heights=c(1,5))
     par(mar=rep(0,4))
     plot.new()
-    text(x=0.1, y=0.5,
-         labels=paste0('sentiment score for ', input$widget_select_album, ": ", sentiment_score(sentiment_data())),
+    text(x=0.5, y=0.5,
+         labels=paste0('Sentiment score for ', input$widget_select_album, ": ", sentiment_score(sentiment_data())),
          cex=1.5)
     comparison.cloud(sentiment_cloud(),
                      scale = c(5, 1.5),
