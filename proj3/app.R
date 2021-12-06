@@ -133,14 +133,6 @@ server <- function(input, output) {
 
     
     partial_data
-    #partial_data <- partial_data %>%
-    #  count(word, sort = TRUE) %>%
-    #  ungroup() %>%
-    #  arrange(desc(n)) %>%
-    #  slice_head(n = input$widget_output_number)
-    #
-    ##return
-    #partial_data
   })
   
   token_freq <- reactive({
@@ -161,12 +153,10 @@ server <- function(input, output) {
       inner_join(sentiments, by = "word") %>%
       count(word, sentiment, sort = TRUE) %>%
       arrange(desc(n)) %>%
-      ungroup() %>%
       slice_head(n = input$widget_output_number)
       
     
     cloud_words
-    print(cloud_words)
   })
   
   sentiment_cloud <- reactive({
@@ -197,21 +187,19 @@ server <- function(input, output) {
   
   
   # ===============================================
-  # Outputs for the second TAB (i.e. histogram)
+  # Outputs for the second TAB
   # ===============================================
   
   # code for histogram
   output$cloud <- renderPlot({
-    
+    layout(matrix(1:2, nrow=2), heights=c(1,100))
+    par(mar=rep(0,4))
+    plot.new()
     comparison.cloud(sentiment_cloud(),
-                     scale = c(5, 1),
-                     colors = c("tomato", "turquoise3"))
+                     scale = c(5, 1.5),
+                     colors = c("tomato", "turquoise3"),
+                     title.size = 3)
   })
-  #####################################
-
-  
-  
-  #######################################
   
   # code for statistics
   output$sentiment_table <- renderDataTable({
