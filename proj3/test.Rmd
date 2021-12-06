@@ -88,8 +88,8 @@ austen_tokens <- austen_books() %>%
 
 austen_words <- austen_tokens %>%
   inner_join(sentiments, by = "word") %>%
-  count(word, sentiment, sort = TRUE) %>%
-  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
+  count(word, sentiment, sort = TRUE) #%>%
+  #reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
 
 #austen_tokens
 #token_data
@@ -113,6 +113,7 @@ cloud_words <- token_data %>%
 #      slice_head(n = 20)
 #words
 cloud_words
+#austen_words
 #token_data
 
 

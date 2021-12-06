@@ -161,11 +161,17 @@ server <- function(input, output) {
       inner_join(sentiments, by = "word") %>%
       count(word, sentiment, sort = TRUE) %>%
       arrange(desc(n)) %>%
-      slice_head(n = input$widget_output_number) %>%
-      reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
+      ungroup() %>%
+      slice_head(n = input$widget_output_number)
+      
     
     cloud_words
     print(cloud_words)
+  })
+  
+  sentiment_cloud <- reactive({
+    cloud_data <- sentiment_data() %>%
+      reshape2::acast(word ~ sentiment, value.var = "n", fill = 0)
   })
   
   
@@ -196,9 +202,8 @@ server <- function(input, output) {
   
   # code for histogram
   output$cloud <- renderPlot({
-    # replace the code below with your code!!!
     
-    comparison.cloud(sentiment_data(),
+    comparison.cloud(sentiment_cloud(),
                      scale = c(5, 1),
                      colors = c("tomato", "turquoise3"))
   })
@@ -210,7 +215,7 @@ server <- function(input, output) {
   
   # code for statistics
   output$sentiment_table <- renderDataTable({
-    # replace the code below with your code!!!
+    
     sentiment_data()
   })
   
