@@ -30,6 +30,18 @@ album_list = setNames(as.list(distinct_album), distinct_album)
 min_year = min(data$year)
 max_year = max(data$year)
 
+sentiment_score = function(sentiment_data) {
+  
+  pos_neg = sentiment_data %>%
+    group_by(sentiment) %>%
+    summarise(n = sum(n))
+  
+  pos = pos_neg[pos_neg$sentiment == 'positive',]$n
+  neg  = pos_neg[pos_neg$sentiment == 'negative',]$n
+  
+  return(pos - neg)
+}
+
 # ===============================================
 # Define UserInterface "ui" for application
 # ===============================================
@@ -155,7 +167,6 @@ server <- function(input, output) {
       arrange(desc(n)) %>%
       slice_head(n = input$widget_output_number)
       
-    
     cloud_words
   })
   
@@ -192,9 +203,12 @@ server <- function(input, output) {
   
   # code for histogram
   output$cloud <- renderPlot({
-    layout(matrix(1:2, nrow=2), heights=c(1,100))
+    layout(matrix(1:2, nrow=2), heights=c(1,5))
     par(mar=rep(0,4))
     plot.new()
+    text(x=0.1, y=0.5,
+         labels=paste0('sentiment score for ', input$widget_select_album, ": ", sentiment_score(sentiment_data())),
+         cex=1.5)
     comparison.cloud(sentiment_cloud(),
                      scale = c(5, 1.5),
                      colors = c("tomato", "turquoise3"),
